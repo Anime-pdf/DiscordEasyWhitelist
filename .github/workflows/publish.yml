@@ -1,4 +1,8 @@
 name: Publish JARs
+
+permissions:
+  contents: write
+
 on:
   release:
     types: [published]
@@ -48,4 +52,4 @@ jobs:
           game-versions: |
             >=1.21.8
           version: ${{ github.ref_name }}
-          github-token: ${{ secrets.CLASSIC_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}

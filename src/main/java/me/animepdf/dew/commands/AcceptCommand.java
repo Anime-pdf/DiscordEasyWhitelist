@@ -10,7 +10,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.Optio
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
 import me.animepdf.dew.config.ConfigContainer;
-import me.animepdf.dew.config.LanguageConfig;
 import me.animepdf.dew.util.*;
 import net.aniby.simplewhitelist.PaperWhitelistPlugin;
 import net.aniby.simplewhitelist.configuration.Whitelist;
@@ -23,7 +22,6 @@ import java.util.UUID;
 
 public class AcceptCommand implements SlashCommandProvider {
     private final ConfigContainer configContainer;
-    private final LanguageConfig languageConfig;
     private final PaperWhitelistPlugin whitelistPlugin;
     private final Whitelist whitelist;
     private final DiscordEasyWhitelist plugin;
@@ -31,7 +29,6 @@ public class AcceptCommand implements SlashCommandProvider {
     public AcceptCommand(DiscordEasyWhitelist plugin) {
         this.plugin = plugin;
         this.configContainer = plugin.getConfigContainer();
-        this.languageConfig = this.configContainer.getLanguageConfig();
         this.whitelistPlugin = plugin.getSimpleWhitelistHandler();
         this.whitelist = this.whitelistPlugin.getConfiguration().getWhitelist();
     }
@@ -50,7 +47,7 @@ public class AcceptCommand implements SlashCommandProvider {
     public void acceptCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -64,11 +61,11 @@ public class AcceptCommand implements SlashCommandProvider {
 
             if (memberRaw == null || memberRaw.getAsMember() == null) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "accept")
                                         .set("arg", "member")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -76,11 +73,11 @@ public class AcceptCommand implements SlashCommandProvider {
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "accept")
                                         .set("arg", "username")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -94,24 +91,24 @@ public class AcceptCommand implements SlashCommandProvider {
         UUID uuid = BukkitUtils.uuidFromUsername(username);
         UUID linkedToDiscordId = linkManager.getUuid(member.getId());
         if (linkedToDiscordId != null) {
-            output.add(this.languageConfig.warningPrefix +
+            output.add(this.configContainer.getLanguageConfig().warningPrefix +
                     MessageFormatter.create()
                             .set("discord_mention", member.getAsMention())
                             .set("discord_username", member.getUser().getAsTag())
                             .set("discord_name", member.getEffectiveName())
                             .set("discord_id", member.getId())
                             .set("username", Bukkit.getOfflinePlayer(linkedToDiscordId).getName())
-                            .apply(this.languageConfig.discordAlreadyLinked));
+                            .apply(this.configContainer.getLanguageConfig().discordAlreadyLinked));
         } else {
             LinkUtils.linkAccount(this.plugin.getLogger(), uuid, member.getId());
         }
 
         // whitelist
         if (whitelist.contains(username)) {
-            output.add(this.languageConfig.warningPrefix +
+            output.add(this.configContainer.getLanguageConfig().warningPrefix +
                     MessageFormatter.create()
                             .set("username", username)
-                            .apply(this.languageConfig.whitelistAlreadyContainsUsername));
+                            .apply(this.configContainer.getLanguageConfig().whitelistAlreadyContainsUsername));
         } else {
             WhitelistUtils.addToWhitelist(this.plugin.getLogger(), this.whitelistPlugin, username);
         }
@@ -139,10 +136,10 @@ public class AcceptCommand implements SlashCommandProvider {
         // welcome message
         var welcomeChannel = guild.getTextChannelById(this.configContainer.getGeneralConfig().welcomeChannelId);
         if (welcomeChannel == null) {
-            output.add(this.languageConfig.warningPrefix +
+            output.add(this.configContainer.getLanguageConfig().warningPrefix +
                     MessageFormatter.create()
                             .set("channel_id", this.configContainer.getGeneralConfig().welcomeChannelId)
-                            .apply(this.languageConfig.channelNotFound));
+                            .apply(this.configContainer.getLanguageConfig().channelNotFound));
         } else {
             String message = String.join("\n", this.configContainer.getLanguageConfig().welcomeMessage);
             welcomeChannel.sendMessage(
@@ -165,12 +162,12 @@ public class AcceptCommand implements SlashCommandProvider {
 
         if (output.isEmpty()) {
             event.getHook().sendMessage(
-                    formatter.apply(this.languageConfig.successPrefix + this.languageConfig.acceptOutputWithoutWarnings)
+                    formatter.apply(this.configContainer.getLanguageConfig().successPrefix + this.configContainer.getLanguageConfig().acceptOutputWithoutWarnings)
             ).queue();
         } else {
             event.getHook().sendMessage(
-                    formatter.set("output", String.join("\n", output)).apply(this.languageConfig.outputWithWarnings) +
-                            formatter.apply(this.languageConfig.successPrefix + this.languageConfig.acceptOutputWithoutWarnings)
+                    formatter.set("output", String.join("\n", output)).apply(this.configContainer.getLanguageConfig().outputWithWarnings) +
+                            formatter.apply(this.configContainer.getLanguageConfig().successPrefix + this.configContainer.getLanguageConfig().acceptOutputWithoutWarnings)
             ).queue();
         }
     }

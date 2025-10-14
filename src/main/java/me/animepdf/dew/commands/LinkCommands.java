@@ -12,7 +12,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.SubcommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
 import me.animepdf.dew.config.ConfigContainer;
-import me.animepdf.dew.config.LanguageConfig;
 import me.animepdf.dew.util.BukkitUtils;
 import me.animepdf.dew.util.DiscordUtils;
 import me.animepdf.dew.util.LinkUtils;
@@ -24,13 +23,11 @@ import java.util.UUID;
 
 public class LinkCommands implements SlashCommandProvider {
     private final ConfigContainer configContainer;
-    private final LanguageConfig languageConfig;
     private final DiscordEasyWhitelist plugin;
 
     public LinkCommands(DiscordEasyWhitelist plugin) {
         this.plugin = plugin;
         this.configContainer = plugin.getConfigContainer();
-        this.languageConfig = this.configContainer.getLanguageConfig();
     }
 
     @Override
@@ -57,7 +54,7 @@ public class LinkCommands implements SlashCommandProvider {
     public void linkCheckCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -77,7 +74,7 @@ public class LinkCommands implements SlashCommandProvider {
             }
 
             if (username == null && member == null) {
-                event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noCommandArgument).queue();
+                event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noCommandArgument).queue();
                 return;
             }
         }
@@ -96,12 +93,12 @@ public class LinkCommands implements SlashCommandProvider {
                         .set("discord_username", user == null ? "" : user.getAsTag())
                         .set("discord_name", user == null ? "" : user.getEffectiveName())
                         .set("discord_id", discordId)
-                        .apply(this.languageConfig.usernameLinked)
+                        .apply(this.configContainer.getLanguageConfig().usernameLinked)
                 ).queue();
             } else {
                 event.getHook().sendMessage(MessageFormatter.create()
                         .set("username", username)
-                        .apply(this.languageConfig.usernameNotLinked)
+                        .apply(this.configContainer.getLanguageConfig().usernameNotLinked)
                 ).queue();
             }
         } else if (username == null) {
@@ -114,7 +111,7 @@ public class LinkCommands implements SlashCommandProvider {
                         .set("discord_username", member.getUser().getAsTag())
                         .set("discord_name", member.getEffectiveName())
                         .set("discord_id", discordId)
-                        .apply(this.languageConfig.discordLinked)
+                        .apply(this.configContainer.getLanguageConfig().discordLinked)
                 ).queue();
             } else {
                 event.getHook().sendMessage(MessageFormatter.create()
@@ -122,11 +119,11 @@ public class LinkCommands implements SlashCommandProvider {
                         .set("discord_username", member.getUser().getAsTag())
                         .set("discord_name", member.getEffectiveName())
                         .set("discord_id", discordId)
-                        .apply(this.languageConfig.discordNotLinked)
+                        .apply(this.configContainer.getLanguageConfig().discordNotLinked)
                 ).queue();
             }
         } else {
-            event.getHook().sendMessage(this.languageConfig.tooManyCommandArguments).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().tooManyCommandArguments).queue();
         }
     }
 
@@ -134,7 +131,7 @@ public class LinkCommands implements SlashCommandProvider {
     public void linkAddCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -148,11 +145,11 @@ public class LinkCommands implements SlashCommandProvider {
 
             if (memberRaw == null || memberRaw.getAsMember() == null) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "link/check")
                                         .set("arg", "member")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -160,11 +157,11 @@ public class LinkCommands implements SlashCommandProvider {
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "link/check")
                                         .set("arg", "username")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -177,30 +174,30 @@ public class LinkCommands implements SlashCommandProvider {
         UUID uuid = BukkitUtils.uuidFromUsername(username);
         UUID linkedToDiscordId = linkManager.getUuid(discordId);
         if (linkedToDiscordId == uuid) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix +
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix +
                     MessageFormatter.create()
                             .set("discord_mention", member.getAsMention())
                             .set("discord_username", member.getUser().getAsTag())
                             .set("discord_name", member.getEffectiveName())
                             .set("discord_id", member.getId())
                             .set("username", Bukkit.getOfflinePlayer(linkedToDiscordId).getName())
-                            .apply(this.languageConfig.discordAlreadyLinked)
+                            .apply(this.configContainer.getLanguageConfig().discordAlreadyLinked)
             ).queue();
             return;
         } else if (linkManager.getUuid(discordId) != null || linkManager.getDiscordId(uuid) != null) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.discordOrUsernameAlreadyLinked).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().discordOrUsernameAlreadyLinked).queue();
             return;
         }
 
         LinkUtils.linkAccount(this.plugin.getLogger(), uuid, discordId);
-        event.getHook().sendMessage(this.languageConfig.successPrefix +
+        event.getHook().sendMessage(this.configContainer.getLanguageConfig().successPrefix +
                 MessageFormatter.create()
                         .set("discord_mention", member.getAsMention())
                         .set("discord_username", member.getUser().getAsTag())
                         .set("discord_name", member.getEffectiveName())
                         .set("discord_id", member.getId())
                         .set("username", username)
-                        .apply(this.languageConfig.discordLinked)
+                        .apply(this.configContainer.getLanguageConfig().discordLinked)
         ).queue();
     }
 
@@ -208,7 +205,7 @@ public class LinkCommands implements SlashCommandProvider {
     public void linkRemoveCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -228,7 +225,7 @@ public class LinkCommands implements SlashCommandProvider {
             }
 
             if (username == null && member == null) {
-                event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noCommandArgument).queue();
+                event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noCommandArgument).queue();
                 return;
             }
         }
@@ -241,14 +238,14 @@ public class LinkCommands implements SlashCommandProvider {
             if (discordId == null) {
                 event.getHook().sendMessage(MessageFormatter.create()
                         .set("username", username)
-                        .apply(this.languageConfig.usernameNotLinked)
+                        .apply(this.configContainer.getLanguageConfig().usernameNotLinked)
                 ).queue();
                 return;
             }
             LinkUtils.unlinkAccount(this.plugin.getLogger(), uuid);
             event.getHook().sendMessage(MessageFormatter.create()
                     .set("username", username)
-                    .apply(this.languageConfig.usernameUnLinked)
+                    .apply(this.configContainer.getLanguageConfig().usernameUnLinked)
             ).queue();
         } else if (username == null) {
             String discordId = member.getId();
@@ -259,7 +256,7 @@ public class LinkCommands implements SlashCommandProvider {
                         .set("discord_username", member.getUser().getAsTag())
                         .set("discord_name", member.getEffectiveName())
                         .set("discord_id", discordId)
-                        .apply(this.languageConfig.discordNotLinked)
+                        .apply(this.configContainer.getLanguageConfig().discordNotLinked)
                 ).queue();
                 return;
             }
@@ -269,10 +266,10 @@ public class LinkCommands implements SlashCommandProvider {
                     .set("discord_username", member.getUser().getAsTag())
                     .set("discord_name", member.getEffectiveName())
                     .set("discord_id", discordId)
-                    .apply(this.languageConfig.discordUnLinked)
+                    .apply(this.configContainer.getLanguageConfig().discordUnLinked)
             ).queue();
         } else {
-            event.getHook().sendMessage(this.languageConfig.tooManyCommandArguments).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().tooManyCommandArguments).queue();
         }
     }
 }

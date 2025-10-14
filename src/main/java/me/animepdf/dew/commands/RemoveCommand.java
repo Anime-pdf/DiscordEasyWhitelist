@@ -10,7 +10,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.Optio
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
 import me.animepdf.dew.config.ConfigContainer;
-import me.animepdf.dew.config.LanguageConfig;
 import me.animepdf.dew.util.DiscordUtils;
 import me.animepdf.dew.util.LinkUtils;
 import me.animepdf.dew.util.MessageFormatter;
@@ -26,7 +25,6 @@ import java.util.Set;
 
 public class RemoveCommand implements SlashCommandProvider {
     private final ConfigContainer configContainer;
-    private final LanguageConfig languageConfig;
     private final PaperWhitelistPlugin whitelistPlugin;
     private final Whitelist whitelist;
     private final DiscordEasyWhitelist plugin;
@@ -34,7 +32,6 @@ public class RemoveCommand implements SlashCommandProvider {
     public RemoveCommand(DiscordEasyWhitelist plugin) {
         this.plugin = plugin;
         this.configContainer = plugin.getConfigContainer();
-        this.languageConfig = this.configContainer.getLanguageConfig();
         this.whitelistPlugin = plugin.getSimpleWhitelistHandler();
         this.whitelist = this.whitelistPlugin.getConfiguration().getWhitelist();
     }
@@ -53,7 +50,7 @@ public class RemoveCommand implements SlashCommandProvider {
     public void removeCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -67,11 +64,11 @@ public class RemoveCommand implements SlashCommandProvider {
 
             if (memberRaw == null || memberRaw.getAsMember() == null) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "remove")
                                         .set("arg", "member")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -89,23 +86,23 @@ public class RemoveCommand implements SlashCommandProvider {
         // discord
         var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
         if (linkManager.getUuid(member.getId()) == null) {
-            output.add(this.languageConfig.warningPrefix +
+            output.add(this.configContainer.getLanguageConfig().warningPrefix +
                     MessageFormatter.create()
                             .set("discord_mention", member.getAsMention())
                             .set("discord_username", member.getUser().getAsTag())
                             .set("discord_name", member.getEffectiveName())
                             .set("discord_id", member.getId())
-                            .apply(this.languageConfig.discordNotLinked));
+                            .apply(this.configContainer.getLanguageConfig().discordNotLinked));
         } else {
             LinkUtils.unlinkAccount(this.plugin.getLogger(), member.getId());
         }
 
         // whitelist
         if (!whitelist.contains(username)) {
-            output.add(this.languageConfig.warningPrefix +
+            output.add(this.configContainer.getLanguageConfig().warningPrefix +
                     MessageFormatter.create()
                             .set("username", username)
-                            .apply(this.languageConfig.whitelistNotContainsUsername));
+                            .apply(this.configContainer.getLanguageConfig().whitelistNotContainsUsername));
         } else {
             WhitelistUtils.removeFromWhitelist(this.plugin.getLogger(), this.whitelistPlugin, username);
         }
@@ -122,10 +119,10 @@ public class RemoveCommand implements SlashCommandProvider {
         var guild = member.getGuild();
         var banChannel = guild.getTextChannelById(this.configContainer.getGeneralConfig().bansChannelId);
         if (banChannel == null) {
-            output.add(this.languageConfig.warningPrefix +
+            output.add(this.configContainer.getLanguageConfig().warningPrefix +
                     MessageFormatter.create()
                             .set("channel_id", this.configContainer.getGeneralConfig().bansChannelId)
-                            .apply(this.languageConfig.channelNotFound));
+                            .apply(this.configContainer.getLanguageConfig().channelNotFound));
         } else {
             String message = String.join("\n", this.configContainer.getLanguageConfig().banMessage);
             banChannel.sendMessage(
@@ -139,7 +136,7 @@ public class RemoveCommand implements SlashCommandProvider {
         }
 
         // ban
-        guild.ban(member, 0, this.languageConfig.discordBanReason).queue();
+        guild.ban(member, 0, this.configContainer.getLanguageConfig().discordBanReason).queue();
 
         // success
         MessageFormatter formatter = MessageFormatter.create()
@@ -151,12 +148,12 @@ public class RemoveCommand implements SlashCommandProvider {
 
         if (output.isEmpty()) {
             event.getHook().sendMessage(
-                    formatter.apply(this.languageConfig.successPrefix + this.languageConfig.removeOutputWithoutWarnings)
+                    formatter.apply(this.configContainer.getLanguageConfig().successPrefix + this.configContainer.getLanguageConfig().removeOutputWithoutWarnings)
             ).queue();
         } else {
             event.getHook().sendMessage(
-                    formatter.set("output", String.join("\n", output)).apply(this.languageConfig.outputWithWarnings) +
-                            formatter.apply(this.languageConfig.successPrefix + this.languageConfig.removeOutputWithoutWarnings)
+                    formatter.set("output", String.join("\n", output)).apply(this.configContainer.getLanguageConfig().outputWithWarnings) +
+                            formatter.apply(this.configContainer.getLanguageConfig().successPrefix + this.configContainer.getLanguageConfig().removeOutputWithoutWarnings)
             ).queue();
         }
     }

@@ -9,7 +9,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.SubcommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
 import me.animepdf.dew.config.ConfigContainer;
-import me.animepdf.dew.config.LanguageConfig;
 import me.animepdf.dew.util.DiscordUtils;
 import me.animepdf.dew.util.MessageFormatter;
 import me.animepdf.dew.util.WhitelistUtils;
@@ -21,7 +20,6 @@ import java.util.Set;
 
 public class WhitelistCommands implements SlashCommandProvider {
     private final ConfigContainer configContainer;
-    private final LanguageConfig languageConfig;
     private final PaperWhitelistPlugin whitelistPlugin;
     private final Whitelist whitelist;
     private final DiscordEasyWhitelist plugin;
@@ -29,7 +27,6 @@ public class WhitelistCommands implements SlashCommandProvider {
     public WhitelistCommands(DiscordEasyWhitelist plugin) {
         this.plugin = plugin;
         this.configContainer = plugin.getConfigContainer();
-        this.languageConfig = this.configContainer.getLanguageConfig();
         this.whitelistPlugin = plugin.getSimpleWhitelistHandler();
         this.whitelist = this.whitelistPlugin.getConfiguration().getWhitelist();
     }
@@ -55,7 +52,7 @@ public class WhitelistCommands implements SlashCommandProvider {
     public void whitelistCheckCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -67,11 +64,11 @@ public class WhitelistCommands implements SlashCommandProvider {
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "whitelist/check")
                                         .set("arg", "username")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -82,12 +79,12 @@ public class WhitelistCommands implements SlashCommandProvider {
         if (whitelist.contains(username)) {
             event.getHook().sendMessage(MessageFormatter.create()
                     .set("username", username)
-                    .apply(this.languageConfig.whitelistContainsUsername)
+                    .apply(this.configContainer.getLanguageConfig().whitelistContainsUsername)
             ).queue();
         } else {
             event.getHook().sendMessage(MessageFormatter.create()
                     .set("username", username)
-                    .apply(this.languageConfig.whitelistNotContainsUsername)
+                    .apply(this.configContainer.getLanguageConfig().whitelistNotContainsUsername)
             ).queue();
         }
     }
@@ -96,7 +93,7 @@ public class WhitelistCommands implements SlashCommandProvider {
     public void whitelistAddCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -108,11 +105,11 @@ public class WhitelistCommands implements SlashCommandProvider {
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "whitelist/add")
                                         .set("arg", "username")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -123,13 +120,13 @@ public class WhitelistCommands implements SlashCommandProvider {
         if (whitelist.contains(username)) {
             event.getHook().sendMessage(MessageFormatter.create()
                     .set("username", username)
-                    .apply(this.languageConfig.whitelistAlreadyContainsUsername)
+                    .apply(this.configContainer.getLanguageConfig().whitelistAlreadyContainsUsername)
             ).queue();
         } else {
             WhitelistUtils.addToWhitelist(this.plugin.getLogger(), this.whitelistPlugin, username);
             event.getHook().sendMessage(MessageFormatter.create()
                     .set("username", username)
-                    .apply(this.languageConfig.whitelistAddedUsername)
+                    .apply(this.configContainer.getLanguageConfig().whitelistAddedUsername)
             ).queue();
         }
     }
@@ -138,7 +135,7 @@ public class WhitelistCommands implements SlashCommandProvider {
     public void whitelistRemoveCommand(SlashCommandEvent event) {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.languageConfig.errorPrefix + this.languageConfig.noPermission).queue();
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
             return;
         }
 
@@ -150,11 +147,11 @@ public class WhitelistCommands implements SlashCommandProvider {
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
                 event.getHook().sendMessage(
-                        this.languageConfig.errorPrefix +
+                        this.configContainer.getLanguageConfig().errorPrefix +
                                 MessageFormatter.create()
                                         .set("command", "whitelist/remove")
                                         .set("arg", "member")
-                                        .apply(this.languageConfig.wrongCommandArgument)
+                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
                 ).queue();
                 return;
             }
@@ -165,7 +162,7 @@ public class WhitelistCommands implements SlashCommandProvider {
         if (!this.whitelist.contains(username)) {
             event.getHook().sendMessage(MessageFormatter.create()
                     .set("username", username)
-                    .apply(this.languageConfig.whitelistNotContainsUsername)
+                    .apply(this.configContainer.getLanguageConfig().whitelistNotContainsUsername)
             ).queue();
         } else {
             WhitelistUtils.removeFromWhitelist(this.plugin.getLogger(), this.whitelistPlugin, username);
@@ -174,13 +171,13 @@ public class WhitelistCommands implements SlashCommandProvider {
             Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
                 var player = Bukkit.getPlayer(username);
                 if (player != null) {
-                    player.kick(this.languageConfig.kickMessage);
+                    player.kick(this.configContainer.getLanguageConfig().kickMessage);
                 }
             });
 
             event.getHook().sendMessage(MessageFormatter.create()
                     .set("username", username)
-                    .apply(this.languageConfig.whitelistRemovedUsername)
+                    .apply(this.configContainer.getLanguageConfig().whitelistRemovedUsername)
             ).queue();
         }
     }

@@ -1,7 +1,9 @@
 name: DiscordEasyWhitelist
 version: '1.0'
 main: me.animepdf.dew.DiscordEasyWhitelist
-load: POSTWORLD
+description: Manage SimpleWhitelist with DiscordSRV integration
+author: Animepdf
+website: https://github.com/Anime-pdf/DiscordEasyWhitelist
 api-version: '1.21'
-authors: [ Animepdf ]
+load: POSTWORLD
 depend: [ DiscordSRV, simplewhitelist ]

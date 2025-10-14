@@ -62,45 +62,45 @@ This file manages operational settings and Discord entity IDs.
 This file contains all messages sent by the plugin. It supports Kyori Adventure `Component` formatting for Minecraft messages (only `kickMessage` for now) and a custom `MessageFormatter` for Discord messages, which utilizes various placeholders.
 Messages are in **Russian** by default, but can be fully customized.
 
-| Option | Type | Default Value | Purpose | Placeholders Used |
-| :--- | :--- | :--- | :--- | :--- |
-| **Prefix** | | | | |
-| `errorPrefix` | String | `🚫 ` | Prefix for error messages. | N/A |
-| `warningPrefix` | String | `⚠️ ` | Prefix for warning messages. | N/A |
-| `successPrefix` | String | `✅ ` | Prefix for success messages. | N/A |
-| **General** | | | | |
-| `noPermission` | String | `Ошибка. У вас нет прав для использования этой команды` | Message when a user lacks command permission. | N/A |
-| `wrongCommandArgument` | String | `Ошибка. {arg} введен некорректно` | Message for an invalid command argument. | `{arg}` |
-| `noCommandArgument` | String | `Ошибка. Введите хотя бы один аргумент` | Message when a required argument is missing. | N/A |
-| `tooManyCommandArguments` | String | `Ошибка. Слишком много аргументов` | Message when too many arguments are provided. | N/A |
-| `outputWithWarnings` | String | `Предупреждения: \n{output}\n\n` | Wrapper for output that includes warnings. | `{output}` |
-| `channelNotFound` | String | `Канал \`{channel_id}\` не найден, сообщение не будет отправлено` | Warning when a configured Discord channel ID is invalid. | `{channel_id}` |
-| **Accept** | | | | |
-| `acceptOutputWithoutWarnings` | String | `{discord_mention} успешно добавлен и привязан к нику \`{username}\`!` | Success message for the `/accept` command. | `{discord_mention}`, `{username}` |
-| `welcomeMessage` | List<String> | List of custom welcome messages. | Messages sent to the `welcomeChannelId` after `/accept`. | `{discord_mention}` |
-| **Remove** | | | | |
-| `kickMessage` | Component | `Вы были удалены из вайт-листа` (Red Text) | The message displayed when a player is kicked from the server (e.g., via `/remove`). | N/A |
-| `removeOutputWithoutWarnings` | String | `{discord_mention} (\`{username}\`) успешно забанен и удалён из вайт-листа!` | Success message for the `/remove` command. | `{discord_mention}`, `{username}` |
-| `discordBanReason` | String | `Забанен DEW` | The reason recorded in the Discord Audit Log when a user is banned via `/remove`. | N/A |
-| `banMessage` | List<String> | List of custom ban messages. | Messages sent to the `bansChannelId` after `/remove`. | `{discord_mention}`, `{discord_name}` |
-| **Whitelist** | | | | |
-| `whitelistAlreadyContainsUsername` | String | `Ник \`{username}\` уже присутствует в вайт-листе` | Message for `/whitelist add` when the player is already whitelisted. | `{username}` |
-| `whitelistContainsUsername` | String | `Ник \`{username}\` присутствует в вайт-листе` | Message for `/whitelist check` when the player is whitelisted. | `{username}` |
-| `whitelistNotContainsUsername` | String | `Ник \`{username}\` не присутствует в вайт-листе` | Message for `/whitelist check` when the player is not whitelisted. | `{username}` |
-| `whitelistAddedUsername` | String | `Ник \`{username}\` добавлен в вайт-лист` | Success message for `/whitelist add`. | `{username}` |
-| `whitelistRemovedUsername` | String | `Ник \`{username}\` удалён из вайт-листа` | Success message for `/whitelist remove`. | `{username}` |
-| **Link** | | | | |
-| `linkingDisabled` | String | `Этот функционал выключен` | Error message when a link command is used but linking is disabled. | N/A |
-| `discordAlreadyLinked` | String | `{discord_mention} уже привязан к нику \`{username}\`` | Message when the Discord member is already linked. | `{discord_mention}`, `{username}` |
-| `usernameLinked` | String | `\`{username}\` привязан к {discord_mention}` | Output showing the link status for a username check. | `{username}`, `{discord_mention}` |
-| `usernameNotLinked` | String | `\`{username}\` не привязан к какому-либо аккаунту` | Output when a username is not linked to any Discord account. | `{username}` |
-| `usernameUnLinked` | String | `\`{username}\` был отвязан от аккаунта` | Success message for unlinking a username. | `{username}` |
-| `discordLinked` | String | `{discord_mention} привязан к нику \`{username}\`` | Output showing the link status for a member check. | `{discord_mention}`, `{username}` |
-| `discordNotLinked` | String | `{discord_mention} не привязан к какому-либо нику` | Output when a Discord member is not linked to any username. | `{discord_mention}` |
-| `discordUnLinked` | String | `{discord_mention} был отвязан от ника` | Success message for unlinking a Discord member. | `{discord_mention}` |
-| `discordOrUsernameAlreadyLinked` | String | `Ник или аккаунт уже привязаны к кому-то другому, сначала отвяжите их` | Error when trying to link an already linked entity. | N/A |
-| **Reload** | | | | |
-| `configReloaded` | String | `Конфиг перезагружен` | Success message for the `/reload` command. | N/A |
+| Option | Type | Default Value                                                                | Purpose                                                                              | Placeholders Used |
+| :--- | :--- |:-----------------------------------------------------------------------------|:-------------------------------------------------------------------------------------| :--- |
+| **Prefix** | |                                                                              |                                                                                      | |
+| `errorPrefix` | String | `🚫 `                                                                        | Prefix for error messages.                                                           | N/A |
+| `warningPrefix` | String | `⚠️ `                                                                        | Prefix for warning messages.                                                         | N/A |
+| `successPrefix` | String | `✅ `                                                                         | Prefix for success messages.                                                         | N/A |
+| **General** | |                                                                              |                                                                                      | |
+| `noPermission` | String | `Ошибка. У вас нет прав для использования этой команды`                      | Message when a user lacks command permission.                                        | N/A |
+| `wrongCommandArgument` | String | `Ошибка. {arg} введен некорректно`                                           | Message for an invalid command argument.                                             | `{arg}` |
+| `noCommandArgument` | String | `Ошибка. Введите хотя бы один аргумент`                                      | Message when a required argument is missing.                                         | N/A |
+| `tooManyCommandArguments` | String | `Ошибка. Слишком много аргументов`                                           | Message when too many arguments are provided.                                        | N/A |
+| `outputWithWarnings` | String | `Предупреждения: \n{output}\n\n`                                             | Wrapper for output that includes warnings.                                           | `{output}` |
+| `channelNotFound` | String | `Канал ``{channel_id}`` не найден, сообщение не будет отправлено`            | Warning when a configured Discord channel ID is invalid.                             | `{channel_id}` |
+| **Accept** | |                                                                              |                                                                                      | |
+| `acceptOutputWithoutWarnings` | String | ``{discord_mention} успешно добавлен и привязан к нику `{username}`!``       | Success message for the `/accept` command.                                           | `{discord_mention}`, `{username}` |
+| `welcomeMessage` | List<String> | *List of strings that will be combined into one message.*                    | Message sent to the `welcomeChannelId` after `/accept`.                              | `{discord_mention}` |
+| **Remove** | |                                                                              |                                                                                      | |
+| `kickMessage` | Component | `Вы были удалены из вайт-листа` (Red Text)                                   | The message displayed when a player is kicked from the server (e.g., via `/remove`). | N/A |
+| `removeOutputWithoutWarnings` | String | ``{discord_mention} (`{username}`) успешно забанен и удалён из вайт-листа!`` | Success message for the `/remove` command.                                           | `{discord_mention}`, `{username}` |
+| `discordBanReason` | String | `Забанен DEW`                                                                | The reason recorded in the Discord Audit Log when a user is banned via `/remove`.    | N/A |
+| `banMessage` | List<String> | *List of strings that will be combined into one message.*                                               | Messages sent to the `bansChannelId` after `/remove`.                                | `{discord_mention}`, `{discord_name}` |
+| **Whitelist** | |                                                                              |                                                                                      | |
+| `whitelistAlreadyContainsUsername` | String | ``Ник `{username}` уже присутствует в вайт-листе``                           | Message for `/whitelist add` when the player is already whitelisted.                 | `{username}` |
+| `whitelistContainsUsername` | String | ``Ник `{username}` присутствует в вайт-листе``                               | Message for `/whitelist check` when the player is whitelisted.                       | `{username}` |
+| `whitelistNotContainsUsername` | String | ``Ник `{username}` не присутствует в вайт-листе``                            | Message for `/whitelist check` when the player is not whitelisted.                   | `{username}` |
+| `whitelistAddedUsername` | String | ``Ник `{username}` добавлен в вайт-лист``                                    | Success message for `/whitelist add`.                                                | `{username}` |
+| `whitelistRemovedUsername` | String | ``Ник `{username}` удалён из вайт-листа``                                    | Success message for `/whitelist remove`.                                             | `{username}` |
+| **Link** | |                                                                              |                                                                                      | |
+| `linkingDisabled` | String | `Этот функционал выключен`                                                   | Error message when a link command is used but linking is disabled.                   | N/A |
+| `discordAlreadyLinked` | String | ``{discord_mention} уже привязан к нику `{username}` ``                      | Message when the Discord member is already linked.                                   | `{discord_mention}`, `{username}` |
+| `usernameLinked` | String | `` `{username}` привязан к {discord_mention}``                               | Output showing the link status for a username check.                                 | `{username}`, `{discord_mention}` |
+| `usernameNotLinked` | String | `` `{username}` не привязан к какому-либо аккаунту``                         | Output when a username is not linked to any Discord account.                         | `{username}` |
+| `usernameUnLinked` | String | `` `{username}` был отвязан от аккаунта``                                    | Success message for unlinking a username.                                            | `{username}` |
+| `discordLinked` | String | ``{discord_mention} привязан к нику `{username}\` ``                         | Output showing the link status for a member check.                                   | `{discord_mention}`, `{username}` |
+| `discordNotLinked` | String | `{discord_mention} не привязан к какому-либо нику`                           | Output when a Discord member is not linked to any username.                          | `{discord_mention}` |
+| `discordUnLinked` | String | `{discord_mention} был отвязан от ника`                                      | Success message for unlinking a Discord member.                                      | `{discord_mention}` |
+| `discordOrUsernameAlreadyLinked` | String | `Ник или аккаунт уже привязаны к кому-то другому, сначала отвяжите их`       | Error when trying to link an already linked entity.                                  | N/A |
+| **Reload** | |                                                                              |                                                                                      | |
+| `configReloaded` | String | `Конфиг перезагружен`                                                        | Success message for the `/reload` command.                                           | N/A |
 
 ## 🕹️ Commands and Usage
 

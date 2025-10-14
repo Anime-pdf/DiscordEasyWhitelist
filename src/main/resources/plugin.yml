@@ -1,0 +1,7 @@
+name: DiscordEasyWhitelist
+version: '1.0'
+main: me.animepdf.dew.DiscordEasyWhitelist
+load: POSTWORLD
+api-version: '1.21'
+authors: [ Animepdf ]
+depend: [ DiscordSRV, simplewhitelist ]

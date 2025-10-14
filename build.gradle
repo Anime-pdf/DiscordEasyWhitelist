@@ -1,0 +1,89 @@
+plugins {
+    id 'java'
+    id("xyz.jpenilla.run-paper") version "2.3.1"
+    id 'com.gradleup.shadow' version '8.3.6'
+}
+
+group = 'me.animepdf'
+version = '1.0'
+
+repositories {
+    mavenCentral() // jda
+    maven { url 'https://nexus.scarsz.me/content/groups/public/' } // discordsrv
+    maven { url 'https://repo.papermc.io/repository/maven-public/' } // paper
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+
+    // DiscordSRV + JDA
+    compileOnly("com.discordsrv:discordsrv:1.28.0")
+    implementation ("net.dv8tion:JDA:6.0.0") {
+        exclude module: 'opus-java'
+        exclude module: 'tink'
+    }
+
+    // SimpleWhitelist
+    compileOnly(files("libs/simplewhitelist-paper-2.0.0.jar"))
+
+    // Config
+    implementation ('org.spongepowered:configurate-core:4.2.0')
+    implementation ('org.spongepowered:configurate-yaml:4.2.0') {
+        exclude group: 'org.yaml', module: 'snakeyaml'
+    }
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
+
+tasks {
+    runServer {
+        // Configure the Minecraft version for our task.
+        // This is the only required configuration besides applying the plugin.
+        // Your plugin's jar (or shadowJar if present) will be used automatically.
+        minecraftVersion("1.21")
+    }
+}
+
+build {
+    dependsOn.add(shadowJar)
+}
+
+shadowJar {
+    archiveClassifier = ''
+
+    relocate 'org.spongepowered.configurate', 'me.animepdf.fastsellcmi.libs.configurate'
+
+    manifest {
+        attributes["paperweight-mappings-namespace"] = "mojang"
+    }
+}
+
+
+def targetJavaVersion = 21
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}

@@ -8,6 +8,8 @@ import java.util.List;
 @ConfigSerializable
 @Getter
 public class GeneralConfig {
+    public boolean enableLinking = false;
+
     public List<String> moderatorRoleIds = List.of("0000000000000000000", "0000000000000000000");
 
     public List<String> rolesToRemove = List.of("0000000000000000000", "0000000000000000000");

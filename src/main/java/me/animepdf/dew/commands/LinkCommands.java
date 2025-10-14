@@ -58,6 +58,11 @@ public class LinkCommands implements SlashCommandProvider {
             return;
         }
 
+        if (!configContainer.getGeneralConfig().enableLinking) {
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().linkingDisabled).queue();
+            return;
+        }
+
         Member member = null;
         String username = null;
 
@@ -135,6 +140,11 @@ public class LinkCommands implements SlashCommandProvider {
             return;
         }
 
+        if (!configContainer.getGeneralConfig().enableLinking) {
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().linkingDisabled).queue();
+            return;
+        }
+
         Member member = null;
         String username = null;
 
@@ -206,6 +216,11 @@ public class LinkCommands implements SlashCommandProvider {
         // permission
         if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
             event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+            return;
+        }
+
+        if (!configContainer.getGeneralConfig().enableLinking) {
+            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().linkingDisabled).queue();
             return;
         }
 

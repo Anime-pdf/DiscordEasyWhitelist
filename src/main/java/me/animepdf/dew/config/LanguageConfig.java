@@ -46,6 +46,7 @@ public class LanguageConfig {
     public String whitelistRemovedUsername = "Ник `{username}` удалён из вайт-листа";
 
     // Link
+    public String linkingDisabled = "Этот функционал выключен";
     public String discordAlreadyLinked = "{discord_mention} уже привязан к нику `{username}`";
     public String usernameLinked = "`{username}` привязан к {discord_mention}";
     public String usernameNotLinked = "`{username}` не привязан к какому-либо аккаунту";

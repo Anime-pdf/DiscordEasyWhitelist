@@ -84,17 +84,19 @@ public class RemoveCommand implements SlashCommandProvider {
         List<String> output = new ArrayList<>();
 
         // discord
-        var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
-        if (linkManager.getUuid(member.getId()) == null) {
-            output.add(this.configContainer.getLanguageConfig().warningPrefix +
-                    MessageFormatter.create()
-                            .set("discord_mention", member.getAsMention())
-                            .set("discord_username", member.getUser().getAsTag())
-                            .set("discord_name", member.getEffectiveName())
-                            .set("discord_id", member.getId())
-                            .apply(this.configContainer.getLanguageConfig().discordNotLinked));
-        } else {
-            LinkUtils.unlinkAccount(this.plugin.getLogger(), member.getId());
+        if (configContainer.getGeneralConfig().enableLinking) {
+            var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
+            if (linkManager.getUuid(member.getId()) == null) {
+                output.add(this.configContainer.getLanguageConfig().warningPrefix +
+                        MessageFormatter.create()
+                                .set("discord_mention", member.getAsMention())
+                                .set("discord_username", member.getUser().getAsTag())
+                                .set("discord_name", member.getEffectiveName())
+                                .set("discord_id", member.getId())
+                                .apply(this.configContainer.getLanguageConfig().discordNotLinked));
+            } else {
+                LinkUtils.unlinkAccount(this.plugin.getLogger(), member.getId());
+            }
         }
 
         // whitelist

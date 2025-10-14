@@ -87,20 +87,22 @@ public class AcceptCommand implements SlashCommandProvider {
         List<String> output = new ArrayList<>();
 
         // discord
-        var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
-        UUID uuid = BukkitUtils.uuidFromUsername(username);
-        UUID linkedToDiscordId = linkManager.getUuid(member.getId());
-        if (linkedToDiscordId != null) {
-            output.add(this.configContainer.getLanguageConfig().warningPrefix +
-                    MessageFormatter.create()
-                            .set("discord_mention", member.getAsMention())
-                            .set("discord_username", member.getUser().getAsTag())
-                            .set("discord_name", member.getEffectiveName())
-                            .set("discord_id", member.getId())
-                            .set("username", Bukkit.getOfflinePlayer(linkedToDiscordId).getName())
-                            .apply(this.configContainer.getLanguageConfig().discordAlreadyLinked));
-        } else {
-            LinkUtils.linkAccount(this.plugin.getLogger(), uuid, member.getId());
+        if (configContainer.getGeneralConfig().enableLinking) {
+            var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
+            UUID uuid = BukkitUtils.uuidFromUsername(username);
+            UUID linkedToDiscordId = linkManager.getUuid(member.getId());
+            if (linkedToDiscordId != null) {
+                output.add(this.configContainer.getLanguageConfig().warningPrefix +
+                        MessageFormatter.create()
+                                .set("discord_mention", member.getAsMention())
+                                .set("discord_username", member.getUser().getAsTag())
+                                .set("discord_name", member.getEffectiveName())
+                                .set("discord_id", member.getId())
+                                .set("username", Bukkit.getOfflinePlayer(linkedToDiscordId).getName())
+                                .apply(this.configContainer.getLanguageConfig().discordAlreadyLinked));
+            } else {
+                LinkUtils.linkAccount(this.plugin.getLogger(), uuid, member.getId());
+            }
         }
 
         // whitelist

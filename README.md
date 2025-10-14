@@ -46,14 +46,14 @@ Configuration is split into two files: `config.yml` for general settings and IDs
 
 This file manages operational settings and Discord entity IDs.
 
-| Option | Type           | Description                                                                                                                                 | Placeholder |
-| :--- |:---------------|:--------------------------------------------------------------------------------------------------------------------------------------------| :--- |
-| `enable-linking` | boolean        | Enables/Disables the automatic linking functionality.                                                                                       | `enableLinking` |
-| `moderator-role-ids` | List\<String\> | A list of Discord Role IDs that are authorized to use administrative commands like `/accept`, `/remove`, and `/reload`.                     | `moderatorRoleIds` |
-| `roles-to-remove` | List\<String\> | A list of Discord Role IDs that will be **removed** from a member when they are successfully whitelisted (e.g., removing a "Waiting" role). | `rolesToRemove` |
-| `roles-to-add` | List\<String\> | A list of Discord Role IDs that will be **added** to a member when they are successfully whitelisted (e.g., adding a "Member" role).        | `rolesToAdd` |
-| `welcome-channel-id` | String         | The Discord Channel ID where the `welcomeMessage` will be sent after a successful `/accept`.                                                | `welcomeChannelId` |
-| `bans-channel-id` | String         | The Discord Channel ID where the `banMessage` will be sent after a successful `/remove`.                                                    | `bansChannelId` |
+| Option | Type           | Description                                                                                                                                 |
+| :--- |:---------------|:--------------------------------------------------------------------------------------------------------------------------------------------|
+| `enable-linking` | boolean        | Enables/Disables the automatic linking functionality.                                                                                       |
+| `moderator-role-ids` | List\<String\> | A list of Discord Role IDs that are authorized to use administrative commands like `/accept`, `/remove`, and `/reload`.                     |
+| `roles-to-remove` | List\<String\> | A list of Discord Role IDs that will be **removed** from a member when they are successfully whitelisted (e.g., removing a "Waiting" role). |
+| `roles-to-add` | List\<String\> | A list of Discord Role IDs that will be **added** to a member when they are successfully whitelisted (e.g., adding a "Member" role).        |
+| `welcome-channel-id` | String         | The Discord Channel ID where the `welcomeMessage` will be sent after a successful `/accept`.                                                |
+| `bans-channel-id` | String         | The Discord Channel ID where the `banMessage` will be sent after a successful `/remove`.                                                    |
 
 -----
 

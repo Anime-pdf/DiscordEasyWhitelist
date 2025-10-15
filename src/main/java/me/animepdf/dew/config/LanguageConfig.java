@@ -35,7 +35,7 @@ public class LanguageConfig {
     public String removeOutputWithoutWarnings = "{discord_mention} (`{username}`) успешно забанен и удалён из вайт-листа!";
     public String discordBanReason = "Забанен DEW";
     public List<String> banMessage = List.of(
-            "{discord_mention} (`{discord_name}`) был забанен."
+            "{discord_mention} (`{username}`) был забанен."
     );
     public List<String> banDirectMessage = List.of(
             "Вы были забенены на сервере."

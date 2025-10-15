@@ -143,6 +143,7 @@ public class RemoveCommand implements SlashCommandProvider {
                             .set("discord_username", member.getUser().getAsTag())
                             .set("discord_name", member.getEffectiveName())
                             .set("discord_id", member.getId())
+                            .set("username", username)
                             .apply(message)
             ).queue();
         }

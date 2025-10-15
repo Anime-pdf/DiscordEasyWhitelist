@@ -1,5 +1,5 @@
 name: DiscordEasyWhitelist
-version: '1.1'
+version: '1.2'
 main: me.animepdf.dew.DiscordEasyWhitelist
 description: Manage SimpleWhitelist with DiscordSRV integration
 author: Animepdf

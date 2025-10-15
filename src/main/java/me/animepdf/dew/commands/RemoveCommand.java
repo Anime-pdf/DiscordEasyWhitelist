@@ -54,6 +54,7 @@ public class RemoveCommand implements SlashCommandProvider {
             return;
         }
 
+        boolean explicitUsername = false;
         Member member;
         String username;
 
@@ -77,6 +78,7 @@ public class RemoveCommand implements SlashCommandProvider {
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
                 username = member.getEffectiveName();
             } else {
+                explicitUsername = true;
                 username = usernameRaw.getAsString().strip();
             }
         }
@@ -86,7 +88,8 @@ public class RemoveCommand implements SlashCommandProvider {
         // discord
         if (configContainer.getGeneralConfig().enableLinking) {
             var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
-            if (linkManager.getUuid(member.getId()) == null) {
+            var linkedUuid = linkManager.getUuid(member.getId());
+            if (linkedUuid == null) {
                 output.add(this.configContainer.getLanguageConfig().warningPrefix +
                         MessageFormatter.create()
                                 .set("discord_mention", member.getAsMention())
@@ -95,6 +98,12 @@ public class RemoveCommand implements SlashCommandProvider {
                                 .set("discord_id", member.getId())
                                 .apply(this.configContainer.getLanguageConfig().discordNotLinked));
             } else {
+                if(this.configContainer.getGeneralConfig().useLinkedUsernameInRemove && !explicitUsername) {
+                    username = Bukkit.getOfflinePlayer(linkedUuid).getName();
+                    if (username == null) {
+                        username = member.getEffectiveName();
+                    }
+                }
                 LinkUtils.unlinkAccount(this.plugin.getLogger(), member.getId());
             }
         }
@@ -110,8 +119,9 @@ public class RemoveCommand implements SlashCommandProvider {
         }
 
         // server kick
+        final String tempUser = username;
         Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
-            var player = Bukkit.getPlayer(username);
+            var player = Bukkit.getPlayer(tempUser);
             if (player != null) {
                 player.kick(Component.text("You was removed from the whitelist"));
             }

@@ -147,6 +147,12 @@ public class RemoveCommand implements SlashCommandProvider {
             ).queue();
         }
 
+        // direct message
+        member.getUser().openPrivateChannel().flatMap(
+                privateChannel ->
+                        privateChannel.sendMessage(String.join("\n", this.configContainer.getLanguageConfig().banDirectMessage)))
+                .queue();
+
         // ban
         guild.ban(member, 0, this.configContainer.getLanguageConfig().discordBanReason).queue();
 

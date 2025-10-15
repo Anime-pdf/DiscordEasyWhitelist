@@ -37,6 +37,9 @@ public class LanguageConfig {
     public List<String> banMessage = List.of(
             "{discord_mention} (`{discord_name}`) был забанен."
     );
+    public List<String> banDirectMessage = List.of(
+            "Вы были забенены на сервере."
+    );
 
     // Whitelist
     public String whitelistAlreadyContainsUsername = "Ник `{username}` уже присутствует в вайт-листе";

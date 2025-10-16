@@ -129,30 +129,34 @@ public class RemoveCommand implements SlashCommandProvider {
 
         // ban message
         var guild = member.getGuild();
-        var banChannel = guild.getTextChannelById(this.configContainer.getGeneralConfig().bansChannelId);
-        if (banChannel == null) {
-            output.add(this.configContainer.getLanguageConfig().warningPrefix +
-                    MessageFormatter.create()
-                            .set("channel_id", this.configContainer.getGeneralConfig().bansChannelId)
-                            .apply(this.configContainer.getLanguageConfig().channelNotFound));
-        } else {
-            String message = String.join("\n", this.configContainer.getLanguageConfig().banMessage);
-            banChannel.sendMessage(
-                    MessageFormatter.create()
-                            .set("discord_mention", member.getAsMention())
-                            .set("discord_username", member.getUser().getAsTag())
-                            .set("discord_name", member.getEffectiveName())
-                            .set("discord_id", member.getId())
-                            .set("username", username)
-                            .apply(message)
-            ).queue();
+        if (this.configContainer.getGeneralConfig().sendBanMessage) {
+            var banChannel = guild.getTextChannelById(this.configContainer.getGeneralConfig().bansChannelId);
+            if (banChannel == null) {
+                output.add(this.configContainer.getLanguageConfig().warningPrefix +
+                        MessageFormatter.create()
+                                .set("channel_id", this.configContainer.getGeneralConfig().bansChannelId)
+                                .apply(this.configContainer.getLanguageConfig().channelNotFound));
+            } else {
+                String message = String.join("\n", this.configContainer.getLanguageConfig().banMessage);
+                banChannel.sendMessage(
+                        MessageFormatter.create()
+                                .set("discord_mention", member.getAsMention())
+                                .set("discord_username", member.getUser().getAsTag())
+                                .set("discord_name", member.getEffectiveName())
+                                .set("discord_id", member.getId())
+                                .set("username", username)
+                                .apply(message)
+                ).queue();
+            }
         }
 
         // direct message
-        member.getUser().openPrivateChannel().flatMap(
-                privateChannel ->
-                        privateChannel.sendMessage(String.join("\n", this.configContainer.getLanguageConfig().banDirectMessage)))
-                .queue();
+        if (this.configContainer.getGeneralConfig().sendDirectBanMessage) {
+            member.getUser().openPrivateChannel().flatMap(
+                            privateChannel ->
+                                    privateChannel.sendMessage(String.join("\n", this.configContainer.getLanguageConfig().banDirectMessage)))
+                    .queue();
+        }
 
         // ban
         guild.ban(member, 0, this.configContainer.getLanguageConfig().discordBanReason).queue();

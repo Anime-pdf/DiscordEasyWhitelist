@@ -11,6 +11,10 @@ public class GeneralConfig {
     public boolean enableLinking = false;
     public boolean useLinkedUsernameInRemove = false;
 
+    public boolean sendWelcomeMessage = true;
+    public boolean sendBanMessage = true;
+    public boolean sendDirectBanMessage = true;
+
     public List<String> moderatorRoleIds = List.of("0000000000000000000", "0000000000000000000");
 
     public List<String> rolesToRemove = List.of("0000000000000000000", "0000000000000000000");

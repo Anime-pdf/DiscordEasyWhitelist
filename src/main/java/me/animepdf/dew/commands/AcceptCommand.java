@@ -136,22 +136,24 @@ public class AcceptCommand implements SlashCommandProvider {
         }
 
         // welcome message
-        var welcomeChannel = guild.getTextChannelById(this.configContainer.getGeneralConfig().welcomeChannelId);
-        if (welcomeChannel == null) {
-            output.add(this.configContainer.getLanguageConfig().warningPrefix +
-                    MessageFormatter.create()
-                            .set("channel_id", this.configContainer.getGeneralConfig().welcomeChannelId)
-                            .apply(this.configContainer.getLanguageConfig().channelNotFound));
-        } else {
-            String message = String.join("\n", this.configContainer.getLanguageConfig().welcomeMessage);
-            welcomeChannel.sendMessage(
-                    MessageFormatter.create()
-                            .set("discord_mention", member.getAsMention())
-                            .set("discord_username", member.getUser().getAsTag())
-                            .set("discord_name", member.getEffectiveName())
-                            .set("discord_id", member.getId())
-                            .apply(message)
-            ).queue();
+        if (this.configContainer.getGeneralConfig().sendWelcomeMessage) {
+            var welcomeChannel = guild.getTextChannelById(this.configContainer.getGeneralConfig().welcomeChannelId);
+            if (welcomeChannel == null) {
+                output.add(this.configContainer.getLanguageConfig().warningPrefix +
+                        MessageFormatter.create()
+                                .set("channel_id", this.configContainer.getGeneralConfig().welcomeChannelId)
+                                .apply(this.configContainer.getLanguageConfig().channelNotFound));
+            } else {
+                String message = String.join("\n", this.configContainer.getLanguageConfig().welcomeMessage);
+                welcomeChannel.sendMessage(
+                        MessageFormatter.create()
+                                .set("discord_mention", member.getAsMention())
+                                .set("discord_username", member.getUser().getAsTag())
+                                .set("discord_name", member.getEffectiveName())
+                                .set("discord_id", member.getId())
+                                .apply(message)
+                ).queue();
+            }
         }
 
         // success

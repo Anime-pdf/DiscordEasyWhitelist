@@ -6,18 +6,13 @@ import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
-import me.animepdf.dew.config.ConfigContainer;
-import me.animepdf.dew.util.DiscordUtils;
+import me.animepdf.dew.abstact.DEWComponent;
 
 import java.util.Set;
 
-public class ReloadConfigCommand implements SlashCommandProvider {
-    private final ConfigContainer configContainer;
-    private final DiscordEasyWhitelist plugin;
-
+public class ReloadConfigCommand extends DEWComponent implements SlashCommandProvider {
     public ReloadConfigCommand(DiscordEasyWhitelist plugin) {
-        this.plugin = plugin;
-        this.configContainer = plugin.getConfigContainer();
+        super(plugin);
     }
 
     @Override
@@ -30,12 +25,12 @@ public class ReloadConfigCommand implements SlashCommandProvider {
     @SlashCommand(path = "reload", deferEphemeral = true, deferReply = true)
     public void reloadCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
         this.configContainer.reloadConfigs();
-        event.getHook().sendMessage(this.configContainer.getLanguageConfig().successPrefix + this.configContainer.getLanguageConfig().configReloaded).queue();
+        discordManager.sendSuccess(event, lang().reload.reloaded);
     }
 }

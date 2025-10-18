@@ -218,6 +218,7 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
                                 "discord_username", member.getUser().getAsTag(),
                                 "discord_name", member.getEffectiveName(),
                                 "discord_id", member.getId(),
+                                "username", username,
                                 "moderator_mention", moderator.getAsMention(),
                                 "moderator_username", moderator.getUser().getAsTag(),
                                 "moderator_name", moderator.getEffectiveName(),

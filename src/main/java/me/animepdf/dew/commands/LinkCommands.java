@@ -1,9 +1,9 @@
 package me.animepdf.dew.commands;
 
-import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.commands.PluginSlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
@@ -11,23 +11,16 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.OptionData;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.SubcommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
-import me.animepdf.dew.config.ConfigContainer;
+import me.animepdf.dew.abstact.DEWComponent;
 import me.animepdf.dew.util.BukkitUtils;
-import me.animepdf.dew.util.DiscordUtils;
-import me.animepdf.dew.util.LinkUtils;
 import me.animepdf.dew.util.MessageFormatter;
-import org.bukkit.Bukkit;
 
 import java.util.Set;
 import java.util.UUID;
 
-public class LinkCommands implements SlashCommandProvider {
-    private final ConfigContainer configContainer;
-    private final DiscordEasyWhitelist plugin;
-
+public class LinkCommands extends DEWComponent implements SlashCommandProvider {
     public LinkCommands(DiscordEasyWhitelist plugin) {
-        this.plugin = plugin;
-        this.configContainer = plugin.getConfigContainer();
+        super(plugin);
     }
 
     @Override
@@ -53,18 +46,28 @@ public class LinkCommands implements SlashCommandProvider {
     @SlashCommand(path = "link/check", deferReply = true, deferEphemeral = true)
     public void linkCheckCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        if (!configContainer.getGeneralConfig().enableLinking) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().linkingDisabled).queue();
+        if (!general().enableLinking) {
+            discordManager.sendError(event,
+                    lang().link.disabled
+            );
             return;
         }
+
 
         Member member = null;
         String username = null;
+        Guild guild = event.getGuild();
+        if (guild == null) {
+            discordManager.sendError(event,
+                    lang().general.onlyOnServer
+            );
+            return;
+        }
 
         // data integrity
         {
@@ -79,69 +82,115 @@ public class LinkCommands implements SlashCommandProvider {
             }
 
             if (username == null && member == null) {
-                event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noCommandArgument).queue();
+                discordManager.sendError(event,
+                        lang().general.noCommandArgument
+                );
                 return;
             }
         }
 
         // discord
-        var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
-
         if (member == null) {
             UUID uuid = BukkitUtils.uuidFromUsername(username);
-            String discordId = linkManager.getDiscordId(uuid);
-            var user = discordId == null ? null : DiscordSRV.getPlugin().getJda().getUserById(discordId);
-            if (discordId != null) {
-                event.getHook().sendMessage(MessageFormatter.create()
-                        .set("username", username)
-                        .set("discord_mention", String.format("<@%s>", discordId))
-                        .set("discord_username", user == null ? "" : user.getAsTag())
-                        .set("discord_name", user == null ? "" : user.getEffectiveName())
-                        .set("discord_id", discordId)
-                        .apply(this.configContainer.getLanguageConfig().usernameLinked)
-                ).queue();
+            String linkedDiscord = linkManager.getLinkedDiscord(uuid);
+            if (linkedDiscord != null) {
+                var targetMember = guild.getMemberById(linkedDiscord);
+                if (targetMember == null) {
+                    var user = discordManager.getUser(linkedDiscord);
+                    if (user == null) {
+                        discordManager.sendError(event,
+                                lang().general.unknownError
+                        );
+                        return;
+                    }
+                    discordManager.sendWarning(event,
+                            MessageFormatter.format(
+                                    lang().link.nicknameLinkedNotOnServer,
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "username", username
+                            )
+                    );
+                } else {
+                    discordManager.sendSuccess(event,
+                            MessageFormatter.format(
+                                    lang().link.nicknameLinkedOnServer,
+                                    "discord_mention", targetMember.getAsMention(),
+                                    "discord_username", targetMember.getUser().getAsTag(),
+                                    "discord_name", targetMember.getEffectiveName(),
+                                    "discord_id", targetMember.getId(),
+                                    "username", username
+                            )
+                    );
+                }
             } else {
-                event.getHook().sendMessage(MessageFormatter.create()
-                        .set("username", username)
-                        .apply(this.configContainer.getLanguageConfig().usernameNotLinked)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().link.nicknameNotLinked,
+                                "username", username
+                        )
+                );
             }
         } else if (username == null) {
             String discordId = member.getId();
-            UUID uuid = linkManager.getUuid(discordId);
-            if (uuid != null) {
-                event.getHook().sendMessage(MessageFormatter.create()
-                        .set("username", Bukkit.getOfflinePlayer(uuid).getName())
-                        .set("discord_mention", member.getAsMention())
-                        .set("discord_username", member.getUser().getAsTag())
-                        .set("discord_name", member.getEffectiveName())
-                        .set("discord_id", discordId)
-                        .apply(this.configContainer.getLanguageConfig().discordLinked)
-                ).queue();
+            UUID linkedUUID = linkManager.getLinkedUUID(discordId);
+            if (linkedUUID != null) {
+                String linkedUsername = BukkitUtils.getNickname(linkedUUID);
+                if (linkedUsername == null) {
+                    discordManager.sendWarning(event,
+                            MessageFormatter.format(
+                                    lang().link.userLinkedNoNickname,
+                                    "discord_mention", member.getAsMention(),
+                                    "discord_username", member.getUser().getAsTag(),
+                                    "discord_name", member.getEffectiveName(),
+                                    "discord_id", member.getId(),
+                                    "uuid", linkedUUID
+                            )
+                    );
+                } else {
+                    discordManager.sendSuccess(event,
+                            MessageFormatter.format(
+                                    lang().link.userLinked,
+                                    "discord_mention", member.getAsMention(),
+                                    "discord_username", member.getUser().getAsTag(),
+                                    "discord_name", member.getEffectiveName(),
+                                    "discord_id", member.getId(),
+                                    "username", linkedUsername
+                            )
+                    );
+                }
             } else {
-                event.getHook().sendMessage(MessageFormatter.create()
-                        .set("discord_mention", member.getAsMention())
-                        .set("discord_username", member.getUser().getAsTag())
-                        .set("discord_name", member.getEffectiveName())
-                        .set("discord_id", discordId)
-                        .apply(this.configContainer.getLanguageConfig().discordNotLinked)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().link.userNotLinked,
+                                "discord_mention", member.getAsMention(),
+                                "discord_username", member.getUser().getAsTag(),
+                                "discord_name", member.getEffectiveName(),
+                                "discord_id", member.getId()
+                        )
+                );
             }
         } else {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().tooManyCommandArguments).queue();
+            discordManager.sendError(event,
+                    lang().general.tooManyCommandArguments
+            );
         }
     }
 
     @SlashCommand(path = "link/add", deferReply = true, deferEphemeral = true)
     public void linkAddCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        if (!configContainer.getGeneralConfig().enableLinking) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().linkingDisabled).queue();
+        if (!general().enableLinking) {
+            discordManager.sendError(event,
+                    lang().link.disabled
+            );
             return;
         }
 
@@ -154,73 +203,91 @@ public class LinkCommands implements SlashCommandProvider {
             var usernameRaw = event.getOption("username");
 
             if (memberRaw == null || memberRaw.getAsMember() == null) {
-                event.getHook().sendMessage(
-                        this.configContainer.getLanguageConfig().errorPrefix +
-                                MessageFormatter.create()
-                                        .set("command", "link/check")
-                                        .set("arg", "member")
-                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().general.wrongCommandArgument,
+                                "command", "link/add",
+                                "arg", "member")
+                );
                 return;
             }
             member = memberRaw.getAsMember();
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
-                event.getHook().sendMessage(
-                        this.configContainer.getLanguageConfig().errorPrefix +
-                                MessageFormatter.create()
-                                        .set("command", "link/check")
-                                        .set("arg", "username")
-                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().general.wrongCommandArgument,
+                                "command", "link/add",
+                                "arg", "username")
+                );
                 return;
             }
             username = usernameRaw.getAsString().strip();
         }
 
         // discord
-        var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
-        String discordId = member.getId();
-        UUID uuid = BukkitUtils.uuidFromUsername(username);
-        UUID linkedToDiscordId = linkManager.getUuid(discordId);
-        if (linkedToDiscordId == uuid) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix +
-                    MessageFormatter.create()
-                            .set("discord_mention", member.getAsMention())
-                            .set("discord_username", member.getUser().getAsTag())
-                            .set("discord_name", member.getEffectiveName())
-                            .set("discord_id", member.getId())
-                            .set("username", Bukkit.getOfflinePlayer(linkedToDiscordId).getName())
-                            .apply(this.configContainer.getLanguageConfig().discordAlreadyLinked)
-            ).queue();
-            return;
-        } else if (linkManager.getUuid(discordId) != null || linkManager.getDiscordId(uuid) != null) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().discordOrUsernameAlreadyLinked).queue();
-            return;
-        }
+        String targetDiscord = member.getId();
+        UUID targetUUID = BukkitUtils.uuidFromUsername(username);
+        String linkedDiscord = linkManager.getLinkedDiscord(targetUUID);
+        UUID linkedUUID = linkManager.getLinkedUUID(targetDiscord);
 
-        LinkUtils.linkAccount(this.plugin.getLogger(), uuid, discordId);
-        event.getHook().sendMessage(this.configContainer.getLanguageConfig().successPrefix +
-                MessageFormatter.create()
-                        .set("discord_mention", member.getAsMention())
-                        .set("discord_username", member.getUser().getAsTag())
-                        .set("discord_name", member.getEffectiveName())
-                        .set("discord_id", member.getId())
-                        .set("username", username)
-                        .apply(this.configContainer.getLanguageConfig().discordLinked)
-        ).queue();
+        if (linkedDiscord == null && linkedUUID == null) {
+            if (linkManager.linkAccount(BukkitUtils.uuidFromUsername(username), member.getId())) {
+                discordManager.sendError(event, lang().general.unknownError);
+            } else {
+                discordManager.sendSuccess(event,
+                        MessageFormatter.format(
+                                lang().link.linkSuccess,
+                                "discord_mention", member.getAsMention(),
+                                "discord_username", member.getUser().getAsTag(),
+                                "discord_name", member.getEffectiveName(),
+                                "discord_id", member.getId(),
+                                "uuid", targetUUID,
+                                "username", username
+                        )
+                );
+            }
+        } else if (linkedUUID != null && linkedDiscord != null &&
+                linkedUUID.equals(targetUUID) &&
+                linkedDiscord.equals(targetDiscord)) {
+            discordManager.sendWarning(event,
+                    MessageFormatter.format(
+                            lang().link.linkWarningAlreadySame,
+                            "discord_mention", member.getAsMention(),
+                            "discord_username", member.getUser().getAsTag(),
+                            "discord_name", member.getEffectiveName(),
+                            "discord_id", member.getId(),
+                            "uuid", linkedUUID,
+                            "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                    )
+            );
+        } else {
+            discordManager.sendError(event,
+                    MessageFormatter.format(
+                            lang().link.linkWarningAlreadyOthers,
+                            "discord_mention", member.getAsMention(),
+                            "discord_username", member.getUser().getAsTag(),
+                            "discord_name", member.getEffectiveName(),
+                            "discord_id", member.getId(),
+                            "uuid", linkedUUID,
+                            "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                    )
+            );
+        }
     }
 
     @SlashCommand(path = "link/remove", deferReply = true, deferEphemeral = true)
     public void linkRemoveCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        if (!configContainer.getGeneralConfig().enableLinking) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().linkingDisabled).queue();
+        if (!general().enableLinking) {
+            discordManager.sendError(event,
+                    lang().link.disabled
+            );
             return;
         }
 
@@ -240,51 +307,87 @@ public class LinkCommands implements SlashCommandProvider {
             }
 
             if (username == null && member == null) {
-                event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noCommandArgument).queue();
+                discordManager.sendError(event,
+                        lang().general.noCommandArgument
+                );
                 return;
             }
         }
 
         // discord
-        var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
         if (member == null) {
             UUID uuid = BukkitUtils.uuidFromUsername(username);
-            String discordId = linkManager.getDiscordId(uuid);
-            if (discordId == null) {
-                event.getHook().sendMessage(MessageFormatter.create()
-                        .set("username", username)
-                        .apply(this.configContainer.getLanguageConfig().usernameNotLinked)
-                ).queue();
-                return;
+            String linkedDiscord = linkManager.getLinkedDiscord(uuid);
+            if (linkManager.unlinkAccount(uuid)) {
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().link.unlinkNicknameNotFound,
+                                "username", username
+                        )
+                );
+            } else {
+                var user = discordManager.getUser(linkedDiscord);
+                if (user == null) {
+                    discordManager.sendError(event,
+                            lang().general.unknownError
+                    );
+                    return;
+                }
+                discordManager.sendSuccess(event,
+                        MessageFormatter.format(
+                                lang().link.unlinkNicknameSuccess,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
+                                "username", username
+                        )
+                );
             }
-            LinkUtils.unlinkAccount(this.plugin.getLogger(), uuid);
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("username", username)
-                    .apply(this.configContainer.getLanguageConfig().usernameUnLinked)
-            ).queue();
         } else if (username == null) {
             String discordId = member.getId();
-            UUID uuid = linkManager.getUuid(discordId);
-            if (uuid == null) {
-                event.getHook().sendMessage(MessageFormatter.create()
-                        .set("discord_mention", member.getAsMention())
-                        .set("discord_username", member.getUser().getAsTag())
-                        .set("discord_name", member.getEffectiveName())
-                        .set("discord_id", discordId)
-                        .apply(this.configContainer.getLanguageConfig().discordNotLinked)
-                ).queue();
-                return;
+            UUID linkedUUID = linkManager.getLinkedUUID(discordId);
+            if (linkManager.unlinkAccount(discordId)) {
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().link.unlinkUserNotFound,
+                                "discord_mention", member.getAsMention(),
+                                "discord_username", member.getUser().getAsTag(),
+                                "discord_name", member.getEffectiveName(),
+                                "discord_id", member.getId(),
+                                "username", username
+                        )
+                );
+            } else {
+                String linkedUsername = BukkitUtils.getNickname(linkedUUID);
+                if (linkedUsername == null) {
+                    discordManager.sendWarning(event,
+                            MessageFormatter.format(
+                                    lang().link.unlinkUserSuccessNoNickname,
+                                    "discord_mention", member.getAsMention(),
+                                    "discord_username", member.getUser().getAsTag(),
+                                    "discord_name", member.getEffectiveName(),
+                                    "discord_id", member.getId(),
+                                    "uuid", linkedUUID
+                            )
+                    );
+                } else {
+                    discordManager.sendSuccess(event,
+                            MessageFormatter.format(
+                                    lang().link.unlinkUserSuccess,
+                                    "discord_mention", member.getAsMention(),
+                                    "discord_username", member.getUser().getAsTag(),
+                                    "discord_name", member.getEffectiveName(),
+                                    "discord_id", member.getId(),
+                                    "username", username
+                            )
+                    );
+                }
             }
-            LinkUtils.unlinkAccount(this.plugin.getLogger(), discordId);
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("discord_mention", member.getAsMention())
-                    .set("discord_username", member.getUser().getAsTag())
-                    .set("discord_name", member.getEffectiveName())
-                    .set("discord_id", discordId)
-                    .apply(this.configContainer.getLanguageConfig().discordUnLinked)
-            ).queue();
         } else {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().tooManyCommandArguments).queue();
+            discordManager.sendError(event,
+                    lang().general.tooManyCommandArguments
+            );
         }
     }
 }

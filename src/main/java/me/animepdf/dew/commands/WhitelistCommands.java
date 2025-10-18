@@ -8,33 +8,21 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.Optio
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.SubcommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
-import me.animepdf.dew.config.ConfigContainer;
-import me.animepdf.dew.util.DiscordUtils;
+import me.animepdf.dew.abstact.DEWComponent;
 import me.animepdf.dew.util.MessageFormatter;
-import me.animepdf.dew.util.WhitelistUtils;
-import net.aniby.simplewhitelist.PaperWhitelistPlugin;
-import net.aniby.simplewhitelist.configuration.Whitelist;
 import org.bukkit.Bukkit;
 
 import java.util.Set;
 
-public class WhitelistCommands implements SlashCommandProvider {
-    private final ConfigContainer configContainer;
-    private final PaperWhitelistPlugin whitelistPlugin;
-    private final Whitelist whitelist;
-    private final DiscordEasyWhitelist plugin;
-
+public class WhitelistCommands extends DEWComponent implements SlashCommandProvider {
     public WhitelistCommands(DiscordEasyWhitelist plugin) {
-        this.plugin = plugin;
-        this.configContainer = plugin.getConfigContainer();
-        this.whitelistPlugin = plugin.getSimpleWhitelistHandler();
-        this.whitelist = this.whitelistPlugin.getConfiguration().getWhitelist();
+        super(plugin);
     }
 
     @Override
     public Set<PluginSlashCommand> getSlashCommands() {
         return Set.of(
-                new PluginSlashCommand(this.plugin, new CommandData("whitelist", "Accept a mimocrocodile to the server")
+                new PluginSlashCommand(this.plugin, new CommandData("whitelist", "Manipulate whitelist")
                         .addSubcommands(new SubcommandData("check", "Check if username is in whitelist")
                                 .addOption(OptionType.STRING, "username", "Username to check", true)
                         )
@@ -51,8 +39,8 @@ public class WhitelistCommands implements SlashCommandProvider {
     @SlashCommand(path = "whitelist/check", deferReply = true, deferEphemeral = true)
     public void whitelistCheckCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
@@ -63,37 +51,40 @@ public class WhitelistCommands implements SlashCommandProvider {
             var usernameRaw = event.getOption("username");
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
-                event.getHook().sendMessage(
-                        this.configContainer.getLanguageConfig().errorPrefix +
-                                MessageFormatter.create()
-                                        .set("command", "whitelist/check")
-                                        .set("arg", "username")
-                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().general.wrongCommandArgument,
+                                "command", "whitelist/check",
+                                "arg", "username")
+                );
                 return;
             }
             username = usernameRaw.getAsString().strip();
         }
 
         // whitelist
-        if (whitelist.contains(username)) {
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("username", username)
-                    .apply(this.configContainer.getLanguageConfig().whitelistContainsUsername)
-            ).queue();
+        if (whitelistManager.isInWhitelist(username)) {
+            discordManager.sendSuccess(event,
+                    MessageFormatter.format(
+                            lang().whitelist.containsUsername,
+                            "username", username
+                    )
+            );
         } else {
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("username", username)
-                    .apply(this.configContainer.getLanguageConfig().whitelistNotContainsUsername)
-            ).queue();
+            discordManager.sendError(event,
+                    MessageFormatter.format(
+                            lang().whitelist.notContainsUsername,
+                            "username", username
+                    )
+            );
         }
     }
 
     @SlashCommand(path = "whitelist/add", deferReply = true, deferEphemeral = true)
     public void whitelistAddCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
@@ -104,38 +95,40 @@ public class WhitelistCommands implements SlashCommandProvider {
             var usernameRaw = event.getOption("username");
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
-                event.getHook().sendMessage(
-                        this.configContainer.getLanguageConfig().errorPrefix +
-                                MessageFormatter.create()
-                                        .set("command", "whitelist/add")
-                                        .set("arg", "username")
-                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().general.wrongCommandArgument,
+                                "command", "whitelist/add",
+                                "arg", "username")
+                );
                 return;
             }
             username = usernameRaw.getAsString().strip();
         }
 
         // whitelist
-        if (whitelist.contains(username)) {
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("username", username)
-                    .apply(this.configContainer.getLanguageConfig().whitelistAlreadyContainsUsername)
-            ).queue();
+        if (whitelistManager.addToWhitelist(username)) {
+            discordManager.sendError(event,
+                    MessageFormatter.format(
+                            lang().whitelist.notAddedUsername,
+                            "username", username
+                    )
+            );
         } else {
-            WhitelistUtils.addToWhitelist(this.plugin.getLogger(), this.whitelistPlugin, username);
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("username", username)
-                    .apply(this.configContainer.getLanguageConfig().whitelistAddedUsername)
-            ).queue();
+            discordManager.sendSuccess(event,
+                    MessageFormatter.format(
+                            lang().whitelist.addedUsername,
+                            "username", username
+                    )
+            );
         }
     }
 
     @SlashCommand(path = "whitelist/remove", deferReply = true, deferEphemeral = true)
     public void whitelistRemoveCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
@@ -146,39 +139,40 @@ public class WhitelistCommands implements SlashCommandProvider {
             var usernameRaw = event.getOption("username");
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
-                event.getHook().sendMessage(
-                        this.configContainer.getLanguageConfig().errorPrefix +
-                                MessageFormatter.create()
-                                        .set("command", "whitelist/remove")
-                                        .set("arg", "member")
-                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().general.wrongCommandArgument,
+                                "command", "whitelist/remove",
+                                "arg", "username")
+                );
                 return;
             }
             username = usernameRaw.getAsString().strip();
         }
 
         // whitelist
-        if (!this.whitelist.contains(username)) {
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("username", username)
-                    .apply(this.configContainer.getLanguageConfig().whitelistNotContainsUsername)
-            ).queue();
+        if (whitelistManager.removeFromWhitelist(username)) {
+            discordManager.sendError(event,
+                    MessageFormatter.format(
+                            lang().whitelist.notRemovedUsername,
+                            "username", username
+                    )
+            );
         } else {
-            WhitelistUtils.removeFromWhitelist(this.plugin.getLogger(), this.whitelistPlugin, username);
+            discordManager.sendSuccess(event,
+                    MessageFormatter.format(
+                            lang().whitelist.removedUsername,
+                            "username", username
+                    )
+            );
 
             // server kick
             Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
                 var player = Bukkit.getPlayer(username);
                 if (player != null) {
-                    player.kick(this.configContainer.getLanguageConfig().kickMessage);
+                    player.kick(lang().remove.kickMessage);
                 }
             });
-
-            event.getHook().sendMessage(MessageFormatter.create()
-                    .set("username", username)
-                    .apply(this.configContainer.getLanguageConfig().whitelistRemovedUsername)
-            ).queue();
         }
     }
 }

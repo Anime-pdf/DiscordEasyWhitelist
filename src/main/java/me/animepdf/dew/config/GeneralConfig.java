@@ -1,15 +1,13 @@
 package me.animepdf.dew.config;
 
-import lombok.Getter;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.List;
 
 @ConfigSerializable
-@Getter
 public class GeneralConfig {
     public boolean enableLinking = false;
-    public boolean useLinkedUsernameInRemove = false;
+    public boolean fallbackToUsernameOnRemove = false;
 
     public boolean sendWelcomeMessage = true;
     public boolean sendBanMessage = true;

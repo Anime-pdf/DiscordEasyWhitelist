@@ -1,6 +1,5 @@
 package me.animepdf.dew.commands;
 
-import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.commands.PluginSlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
@@ -9,28 +8,17 @@ import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCom
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
-import me.animepdf.dew.config.ConfigContainer;
+import me.animepdf.dew.abstact.DEWComponent;
 import me.animepdf.dew.util.*;
-import net.aniby.simplewhitelist.PaperWhitelistPlugin;
-import net.aniby.simplewhitelist.configuration.Whitelist;
-import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class AcceptCommand implements SlashCommandProvider {
-    private final ConfigContainer configContainer;
-    private final PaperWhitelistPlugin whitelistPlugin;
-    private final Whitelist whitelist;
-    private final DiscordEasyWhitelist plugin;
-
+public class AcceptCommand extends DEWComponent implements SlashCommandProvider  {
     public AcceptCommand(DiscordEasyWhitelist plugin) {
-        this.plugin = plugin;
-        this.configContainer = plugin.getConfigContainer();
-        this.whitelistPlugin = plugin.getSimpleWhitelistHandler();
-        this.whitelist = this.whitelistPlugin.getConfiguration().getWhitelist();
+        super(plugin);
     }
 
     @Override
@@ -46,8 +34,8 @@ public class AcceptCommand implements SlashCommandProvider {
     @SlashCommand(path = "accept", deferReply = true, deferEphemeral = true)
     public void acceptCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !DiscordUtils.hasModPermission(this.configContainer, event.getMember())) {
-            event.getHook().sendMessage(this.configContainer.getLanguageConfig().errorPrefix + this.configContainer.getLanguageConfig().noPermission).queue();
+        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+            discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
@@ -60,25 +48,23 @@ public class AcceptCommand implements SlashCommandProvider {
             var usernameRaw = event.getOption("username");
 
             if (memberRaw == null || memberRaw.getAsMember() == null) {
-                event.getHook().sendMessage(
-                        this.configContainer.getLanguageConfig().errorPrefix +
-                                MessageFormatter.create()
-                                        .set("command", "accept")
-                                        .set("arg", "member")
-                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().general.wrongCommandArgument,
+                                "command", "accept",
+                                "arg", "member")
+                );
                 return;
             }
             member = memberRaw.getAsMember();
 
             if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
-                event.getHook().sendMessage(
-                        this.configContainer.getLanguageConfig().errorPrefix +
-                                MessageFormatter.create()
-                                        .set("command", "accept")
-                                        .set("arg", "username")
-                                        .apply(this.configContainer.getLanguageConfig().wrongCommandArgument)
-                ).queue();
+                discordManager.sendError(event,
+                        MessageFormatter.format(
+                                lang().general.wrongCommandArgument,
+                                "command", "accept",
+                                "arg", "username")
+                );
                 return;
             }
             username = usernameRaw.getAsString().strip();
@@ -87,92 +73,172 @@ public class AcceptCommand implements SlashCommandProvider {
         List<String> output = new ArrayList<>();
 
         // discord
-        if (configContainer.getGeneralConfig().enableLinking) {
-            var linkManager = DiscordSRV.getPlugin().getAccountLinkManager();
-            UUID uuid = BukkitUtils.uuidFromUsername(username);
-            UUID linkedToDiscordId = linkManager.getUuid(member.getId());
-            if (linkedToDiscordId != null) {
-                output.add(this.configContainer.getLanguageConfig().warningPrefix +
-                        MessageFormatter.create()
-                                .set("discord_mention", member.getAsMention())
-                                .set("discord_username", member.getUser().getAsTag())
-                                .set("discord_name", member.getEffectiveName())
-                                .set("discord_id", member.getId())
-                                .set("username", Bukkit.getOfflinePlayer(linkedToDiscordId).getName())
-                                .apply(this.configContainer.getLanguageConfig().discordAlreadyLinked));
+        if (general().enableLinking) {
+            String targetDiscord = member.getId();
+            UUID targetUUID = BukkitUtils.uuidFromUsername(username);
+            String linkedDiscord = linkManager.getLinkedDiscord(targetUUID);
+            UUID linkedUUID = linkManager.getLinkedUUID(targetDiscord);
+
+            if (linkedDiscord == null && linkedUUID == null) {
+                if (linkManager.linkAccount(BukkitUtils.uuidFromUsername(username), member.getId())) {
+                    discordManager.sendError(event, lang().general.unknownError);
+                    return;
+                } else {
+                    output.add(discordManager.appendSuccess(
+                            MessageFormatter.format(
+                                    lang().accept.linkSuccess,
+                                    "discord_mention", member.getAsMention(),
+                                    "discord_username", member.getUser().getAsTag(),
+                                    "discord_name", member.getEffectiveName(),
+                                    "discord_id", member.getId(),
+                                    "uuid", targetUUID,
+                                    "username", username
+                            )
+                    ));
+                }
+            } else if (linkedUUID != null && linkedDiscord != null &&
+                    linkedUUID.equals(targetUUID) &&
+                    linkedDiscord.equals(targetDiscord)) {
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().accept.linkWarningAlreadySame,
+                                "discord_mention", member.getAsMention(),
+                                "discord_username", member.getUser().getAsTag(),
+                                "discord_name", member.getEffectiveName(),
+                                "discord_id", member.getId(),
+                                "uuid", linkedUUID,
+                                "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                        )
+                ));
             } else {
-                LinkUtils.linkAccount(this.plugin.getLogger(), uuid, member.getId());
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().accept.linkWarningAlreadyOthers,
+                                "discord_mention", member.getAsMention(),
+                                "discord_username", member.getUser().getAsTag(),
+                                "discord_name", member.getEffectiveName(),
+                                "discord_id", member.getId(),
+                                "uuid", linkedUUID,
+                                "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                        )
+                ));
             }
         }
 
         // whitelist
-        if (whitelist.contains(username)) {
-            output.add(this.configContainer.getLanguageConfig().warningPrefix +
-                    MessageFormatter.create()
-                            .set("username", username)
-                            .apply(this.configContainer.getLanguageConfig().whitelistAlreadyContainsUsername));
+        if (whitelistManager.addToWhitelist(username)) {
+            output.add(discordManager.appendWarning(
+                    MessageFormatter.format(
+                            lang().accept.whitelistWarningAlready,
+                            "username", username
+                    )
+            ));
         } else {
-            WhitelistUtils.addToWhitelist(this.plugin.getLogger(), this.whitelistPlugin, username);
+            output.add(discordManager.appendSuccess(
+                    MessageFormatter.format(
+                            lang().accept.whitelistSuccess,
+                            "username", username
+                    )
+            ));
         }
 
         // guild name
-        member.modifyNickname(username).queue();
+        discordManager.changeName(member, username);
+        output.add(discordManager.appendSuccess(
+                MessageFormatter.format(
+                        lang().accept.discordNameSuccess,
+                        "discord_mention", member.getAsMention(),
+                        "discord_username", member.getUser().getAsTag(),
+                        "discord_name", member.getEffectiveName(),
+                        "discord_id", member.getId(),
+                        "username", username
+                )
+        ));
 
-        // role stuff
+        // roles remove
         var guild = member.getGuild();
-        for (String roleId : this.configContainer.getGeneralConfig().rolesToRemove) {
+        List<String> rolesString = new ArrayList<>();
+        for (String roleId : general().rolesToRemove) {
             var role = guild.getRoleById(roleId);
             if (role == null) {
                 continue;
             }
             guild.removeRoleFromMember(member, role).queue();
+            rolesString.add(String.format("%s", role.getAsMention()));
         }
-        for (String roleId : this.configContainer.getGeneralConfig().rolesToAdd) {
+        output.add(discordManager.appendSuccess(
+                MessageFormatter.format(
+                        lang().accept.discordRoleRemoveSuccess,
+                        "discord_mention", member.getAsMention(),
+                        "discord_username", member.getUser().getAsTag(),
+                        "discord_name", member.getEffectiveName(),
+                        "discord_id", member.getId(),
+                        "roles", String.join(" ", rolesString)
+                )
+        ));
+
+        // roles add
+        rolesString.clear();
+        for (String roleId : general().rolesToAdd) {
             var role = guild.getRoleById(roleId);
             if (role == null) {
                 continue;
             }
             guild.addRoleToMember(member, role).queue();
+            rolesString.add(String.format("%s", role.getAsMention()));
         }
+        output.add(discordManager.appendSuccess(
+                MessageFormatter.format(
+                        lang().accept.discordRoleAddSuccess,
+                        "discord_mention", member.getAsMention(),
+                        "discord_username", member.getUser().getAsTag(),
+                        "discord_name", member.getEffectiveName(),
+                        "discord_id", member.getId(),
+                        "roles", String.join(" ", rolesString)
+                )
+        ));
 
         // welcome message
-        if (this.configContainer.getGeneralConfig().sendWelcomeMessage) {
-            var welcomeChannel = guild.getTextChannelById(this.configContainer.getGeneralConfig().welcomeChannelId);
+        if (general().sendWelcomeMessage) {
+            var welcomeChannel = guild.getTextChannelById(general().welcomeChannelId);
             if (welcomeChannel == null) {
-                output.add(this.configContainer.getLanguageConfig().warningPrefix +
-                        MessageFormatter.create()
-                                .set("channel_id", this.configContainer.getGeneralConfig().welcomeChannelId)
-                                .apply(this.configContainer.getLanguageConfig().channelNotFound));
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().general.channelNotFound,
+                                "channel_id", general().welcomeChannelId
+                        )
+                ));
             } else {
-                String message = String.join("\n", this.configContainer.getLanguageConfig().welcomeMessage);
+                String message = String.join("\n", lang().accept.welcomeMessage);
+                var moderator = event.getMember();
                 welcomeChannel.sendMessage(
-                        MessageFormatter.create()
-                                .set("discord_mention", member.getAsMention())
-                                .set("discord_username", member.getUser().getAsTag())
-                                .set("discord_name", member.getEffectiveName())
-                                .set("discord_id", member.getId())
-                                .apply(message)
+                        MessageFormatter.format(
+                                message,
+                                "discord_mention", member.getAsMention(),
+                                "discord_username", member.getUser().getAsTag(),
+                                "discord_name", member.getEffectiveName(),
+                                "discord_id", member.getId(),
+                                "moderator_mention", moderator.getAsMention(),
+                                "moderator_username", moderator.getUser().getAsTag(),
+                                "moderator_name", moderator.getEffectiveName(),
+                                "moderator_id", moderator.getId()
+                        )
                 ).queue();
+                output.add(discordManager.appendSuccess(
+                        MessageFormatter.format(
+                                lang().accept.welcomeMessageSuccess,
+                                "channel_id", general().welcomeChannelId
+                        )
+                ));
             }
         }
 
         // success
-        MessageFormatter formatter = MessageFormatter.create()
-                .set("discord_mention", member.getAsMention())
-                .set("discord_username", member.getUser().getAsTag())
-                .set("discord_name", member.getEffectiveName())
-                .set("discord_id", member.getId())
-                .set("username", username);
-
-        if (output.isEmpty()) {
-            event.getHook().sendMessage(
-                    formatter.apply(this.configContainer.getLanguageConfig().successPrefix + this.configContainer.getLanguageConfig().acceptOutputWithoutWarnings)
-            ).queue();
-        } else {
-            event.getHook().sendMessage(
-                    formatter.set("output", String.join("\n", output)).apply(this.configContainer.getLanguageConfig().outputWithWarnings) +
-                            formatter.apply(this.configContainer.getLanguageConfig().successPrefix + this.configContainer.getLanguageConfig().acceptOutputWithoutWarnings)
-            ).queue();
-        }
+        event.getHook().sendMessage(
+                MessageFormatter.format(
+                        lang().accept.acceptSuccess,
+                        "report", String.join("\n", output)
+                )
+        ).queue();
     }
 }

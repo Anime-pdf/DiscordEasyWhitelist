@@ -5,32 +5,29 @@ import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
 import lombok.Getter;
 import me.animepdf.dew.commands.*;
 import me.animepdf.dew.config.ConfigContainer;
-import net.aniby.simplewhitelist.PaperWhitelistPlugin;
-import org.bukkit.Bukkit;
+import me.animepdf.dew.managers.DiscordManager;
+import me.animepdf.dew.managers.LinkManager;
+import me.animepdf.dew.managers.WhitelistManager;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 
+@Getter
 public class DiscordEasyWhitelist extends JavaPlugin implements Listener {
-    @Getter
-    private PaperWhitelistPlugin simpleWhitelistHandler;
-    @Getter
     private ConfigContainer configContainer;
+    private WhitelistManager whitelistManager;
+    private LinkManager linkManager;
+    private DiscordManager discordManager;
 
     @Override
     public void onEnable() {
         this.configContainer = new ConfigContainer(getDataFolder());
         this.configContainer.loadConfigs();
 
-        Plugin whitelistPlugin = Bukkit.getPluginManager().getPlugin("simplewhitelist");
-        if ((whitelistPlugin instanceof PaperWhitelistPlugin typedPlugin) && whitelistPlugin.isEnabled()) {
-            this.simpleWhitelistHandler = typedPlugin;
-        } else {
-            getLogger().severe("SimpleWhitelist is not found or disabled!");
-            Bukkit.getPluginManager().disablePlugin(this);
-        }
+        this.whitelistManager = new WhitelistManager(this);
+        this.linkManager = new LinkManager(this);
+        this.discordManager = new DiscordManager(this);
 
         List<SlashCommandProvider> slashCommands = List.of(
                 new AcceptCommand(this),

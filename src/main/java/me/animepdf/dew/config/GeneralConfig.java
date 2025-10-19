@@ -57,6 +57,15 @@ public class GeneralConfig {
     }
     public LeaveOptions leave = new LeaveOptions();
 
+    @ConfigSerializable
+    public static class StatusOptions {
+        public boolean enable = true;
+
+        public StatusOptions() {
+        }
+    }
+    public StatusOptions status = new StatusOptions();
+
     public GeneralConfig() {
     }
 }

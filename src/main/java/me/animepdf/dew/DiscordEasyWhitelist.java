@@ -39,7 +39,8 @@ public class DiscordEasyWhitelist extends JavaPlugin implements Listener {
                 new RemoveCommand(this),
                 new WhitelistCommands(this),
                 new LinkCommands(this),
-                new ReloadConfigCommand(this)
+                new ReloadConfigCommand(this),
+                new StatusCommand(this)
         );
         for (SlashCommandProvider slashCommand : slashCommands) {
             DiscordSRV.api.addSlashCommandProvider(slashCommand);

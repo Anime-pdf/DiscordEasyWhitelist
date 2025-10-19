@@ -188,6 +188,20 @@ public class LanguageConfig {
     }
     public LeaveMessages leave = new LeaveMessages();
 
+    @ConfigSerializable
+    public static class StatusMessages {
+        public String disabled = "Этот функционал выключен";
+
+        public String statusMessageNoPlayers = "## Игроков онлайн нет";
+        public String statusMessage = "## {players_count} игроков онлайн:\n{players}";
+        public String statusEntry = "* {username}";
+        public String statusEntryLinked = "* {username} ({discord_mention})";
+
+        public StatusMessages() {
+        }
+    }
+    public StatusMessages status = new StatusMessages();
+
     public LanguageConfig() {
     }
 }

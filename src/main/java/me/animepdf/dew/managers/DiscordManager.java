@@ -53,6 +53,11 @@ public class DiscordManager {
         return false;
     }
 
+    public void send(@NotNull SlashCommandEvent event, @NotNull String message) {
+        event.getHook().sendMessage(
+                        message
+        ).queue();
+    }
     public void sendError(@NotNull SlashCommandEvent event, @NotNull String message) {
         event.getHook().sendMessage(
                 this.configContainer.getLanguageConfig().errorPrefix +

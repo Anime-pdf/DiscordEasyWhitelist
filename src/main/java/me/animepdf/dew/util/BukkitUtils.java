@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.UUID;
 
 public class BukkitUtils {
@@ -16,19 +17,15 @@ public class BukkitUtils {
         return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
     }
 
-    public static @NotNull String getNickname(@Nullable UUID uuid, @NotNull String fallback) {
-        if (uuid == null)
-            return fallback;
-        String nickname = Bukkit.getOfflinePlayer(uuid).getName();
-        if (!Bukkit.getOfflinePlayer(uuid).hasPlayedBefore() || nickname == null)
-            return fallback;
-        return nickname;
-    }
     public static @Nullable String getNickname(@Nullable UUID uuid) {
         if (uuid == null)
             return null;
-        if (!Bukkit.getOfflinePlayer(uuid).hasPlayedBefore())
+        String nickname = Bukkit.getOfflinePlayer(uuid).getName();
+        if (!Bukkit.getOfflinePlayer(uuid).hasPlayedBefore() || nickname == null)
             return null;
-        return Bukkit.getOfflinePlayer(uuid).getName();
+        return nickname;
+    }
+    public static @NotNull String getNickname(@Nullable UUID uuid, @NotNull String fallback) {
+        return Optional.ofNullable(getNickname(uuid)).orElse(fallback);
     }
 }

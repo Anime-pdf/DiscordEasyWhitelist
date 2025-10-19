@@ -1,10 +1,13 @@
 package me.animepdf.dew;
 
 import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
+import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
 import lombok.Getter;
 import me.animepdf.dew.commands.*;
 import me.animepdf.dew.config.ConfigContainer;
+import me.animepdf.dew.listeners.DiscordListener;
 import me.animepdf.dew.managers.DiscordManager;
 import me.animepdf.dew.managers.LinkManager;
 import me.animepdf.dew.managers.WhitelistManager;
@@ -29,6 +32,8 @@ public class DiscordEasyWhitelist extends JavaPlugin implements Listener {
         this.linkManager = new LinkManager(this);
         this.discordManager = new DiscordManager(this);
 
+        DiscordSRV.api.subscribe(this);
+
         List<SlashCommandProvider> slashCommands = List.of(
                 new AcceptCommand(this),
                 new RemoveCommand(this),
@@ -39,5 +44,10 @@ public class DiscordEasyWhitelist extends JavaPlugin implements Listener {
         for (SlashCommandProvider slashCommand : slashCommands) {
             DiscordSRV.api.addSlashCommandProvider(slashCommand);
         }
+    }
+
+    @Subscribe
+    public void discordReadyEvent(DiscordReadyEvent event) {
+        DiscordSRV.getPlugin().getJda().addEventListener(new DiscordListener(this));
     }
 }

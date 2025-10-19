@@ -152,6 +152,42 @@ public class LanguageConfig {
     }
     public ReloadMessages reload = new ReloadMessages();
 
+    @ConfigSerializable
+    public static class LeaveMessages {
+        public List<String> leaveMessage = List.of(
+                "{discord_mention} (`{username}`) вышел с сервера и понёс наказание 💀"
+        );
+        public List<String> leaveMessageNameNotResolved = List.of(
+                "{discord_mention} вышел с сервера и понёс наказание 💀"
+        );
+        public List<String> leaveDirectMessage = List.of(
+                "Вы вышли с сервера и были удалены из вайт-листа"
+        );
+
+        public String guildBanReason = "Забанен DEW";
+
+        public String reportMessage = "{discord_mention} вышел с сервера!\n{output}";
+
+        public String reportWarningNotLinked = "Аккаунт не был привязан к какому-либо нику";
+        public String reportWarningNameNotResolved = "Игрок ни разу не заходил на сервер, нельзя вычислить ник";
+        public String reportUnlinkedNameNotResolved = "Аккаунт был отвязан от UUID `{uuid}`";
+        public String reportUnlinked = "Аккаунт был отвязан от `{username}`";
+        public String reportRemovedFromWhitelist = "`{username}` был удалён из вайт-листа";
+        public String reportWarningNotInWhitelist = "`{username}` и так не присутствовал в вайт-лист";
+
+        public String reportBannedFromServer = "{discord_mention} был забанен на сервере";
+        public String reportWarningAlreadyBanned = "{discord_mention} уже забанен на сервере";
+
+        public String reportMessageSent = "Сообщение о выходе было отправлено в <#{channel_id}>";
+
+        public String reportDirectMessageSent = "{discord_mention} отправлено личное сообщение";
+        public String reportWarningDirectMessagesClosed = "У {discord_mention} закрыты личные сообщения, сообщение не отправлено";
+
+        public LeaveMessages() {
+        }
+    }
+    public LeaveMessages leave = new LeaveMessages();
+
     public LanguageConfig() {
     }
 }

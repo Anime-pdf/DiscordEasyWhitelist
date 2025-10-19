@@ -40,6 +40,23 @@ public class GeneralConfig {
     }
     public RemoveOptions remove = new RemoveOptions();
 
+    @ConfigSerializable
+    public static class LeaveOptions {
+        public boolean enable = false;
+        public boolean unlinkIfAvailable = true;
+        public boolean removeFromWhitelist = true;
+        public boolean banOnDiscordServer = true;
+        public boolean sendLeaveMessage = true;
+        public String leaveChannelId = "0000000000000000000";
+        public boolean sendDirectLeaveMessage = true;
+        public boolean sendReportMessage = true;
+        public String reportChannelId = "0000000000000000000";
+
+        public LeaveOptions() {
+        }
+    }
+    public LeaveOptions leave = new LeaveOptions();
+
     public GeneralConfig() {
     }
 }

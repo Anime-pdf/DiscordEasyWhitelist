@@ -283,8 +283,9 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         }
 
         // direct message
-        if (general().sendDirectBanMessage) {
-            member.getUser().openPrivateChannel().submit()
+        CompletableFuture<Void> dmFuture = null;
+        if (general().remove.sendDirectBanMessage) {
+            dmFuture = member.getUser().openPrivateChannel().submit()
                     .thenCompose(privateChannel -> {
                         if (reason != null) {
                             return privateChannel.sendMessage(
@@ -297,28 +298,28 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                             return privateChannel.sendMessage(String.join("\n", lang().remove.banDirectMessage)).submit();
                         }
                     })
-                    .whenComplete((message, error) -> {
-                        if (error != null) {
-                            output.add(discordManager.appendWarning(
-                                    MessageFormatter.format(
-                                            lang().remove.banDirectMessageFailure,
-                                            "discord_mention", member.getAsMention(),
-                                            "discord_username", member.getUser().getAsTag(),
-                                            "discord_name", member.getEffectiveName(),
-                                            "discord_id", member.getId()
-                                    )
-                            ));
-                        } else {
-                            output.add(discordManager.appendSuccess(
-                                    MessageFormatter.format(
-                                            lang().remove.banDirectMessageSuccess,
-                                            "discord_mention", member.getAsMention(),
-                                            "discord_username", member.getUser().getAsTag(),
-                                            "discord_name", member.getEffectiveName(),
-                                            "discord_id", member.getId()
-                                    )
-                            ));
-                        }
+                    .thenAccept(message -> {
+                        output.add(discordManager.appendSuccess(
+                                MessageFormatter.format(
+                                        lang().remove.banDirectMessageSuccess,
+                                        "discord_mention", member.getAsMention(),
+                                        "discord_username", member.getUser().getAsTag(),
+                                        "discord_name", member.getEffectiveName(),
+                                        "discord_id", member.getId()
+                                )
+                        ));
+                    })
+                    .exceptionally(throwable -> {
+                        output.add(discordManager.appendWarning(
+                                MessageFormatter.format(
+                                        lang().remove.banDirectMessageFailure,
+                                        "discord_mention", member.getAsMention(),
+                                        "discord_username", member.getUser().getAsTag(),
+                                        "discord_name", member.getEffectiveName(),
+                                        "discord_id", member.getId()
+                                )
+                        ));
+                        return null;
                     });
         }
 
@@ -335,11 +336,22 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         ));
 
         // success
-        event.getHook().sendMessage(
-                MessageFormatter.format(
-                        lang().remove.removeSuccess,
-                        "report", String.join("\n", output)
-                )
-        ).queue();
+        if (dmFuture != null) {
+            dmFuture.whenComplete((unused, throwable) -> {
+                event.getHook().sendMessage(
+                        MessageFormatter.format(
+                                lang().remove.removeSuccess,
+                                "report", String.join("\n", output)
+                        )
+                ).queue();
+            });
+        } else {
+            event.getHook().sendMessage(
+                    MessageFormatter.format(
+                            lang().remove.removeSuccess,
+                            "report", String.join("\n", output)
+                    )
+            ).queue();
+        }
     }
 }

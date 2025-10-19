@@ -80,15 +80,14 @@ public class LanguageConfig {
         );
         public String banMessageSuccess = "В <#{channel_id}> отправлено сообщение о бане";
 
-
         public List<String> banDirectMessage = List.of(
                 "Вы были забанены на сервере"
         );
         public List<String> banDirectMessageReason = List.of(
                 "Вы были забанены на сервере по причине: \"{reason}\""
         );
-        public String banDirectMessageSuccess = "{discord_mention} отправлено сообщение о бане";
-        public String banDirectMessageFailure = "У {discord_mention} закрыты личные сообщения";
+        public String banDirectMessageSuccess = "{discord_mention} отправлено личное сообщение";
+        public String banDirectMessageFailure = "У {discord_mention} закрыты личные сообщения, сообщение не отправлено";
 
         public String guildBanReason = "Забанен DEW";
         public String guildBanSuccess = "{discord_mention} забанен на сервере";

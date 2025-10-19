@@ -1,6 +1,7 @@
 package me.animepdf.dew.managers;
 
 import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Role;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
@@ -30,6 +31,9 @@ public class DiscordManager {
     }
     public void banMember(@NotNull Member member, @NotNull String reason) {
         member.getGuild().ban(member, 0, reason).queue();
+    }
+    public void banUser(@NotNull Guild guild, @NotNull User user, @NotNull String reason) {
+        guild.ban(user, 0, reason).queue();
     }
 
     public boolean hasModPermission(@NotNull Member member) {

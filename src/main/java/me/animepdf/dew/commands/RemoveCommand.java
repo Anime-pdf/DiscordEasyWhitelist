@@ -14,10 +14,8 @@ import me.animepdf.dew.util.MessageFormatter;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class RemoveCommand extends DEWComponent implements SlashCommandProvider {
     public RemoveCommand(DiscordEasyWhitelist plugin) {
@@ -79,7 +77,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
             }
         }
 
-        List<String> output = new ArrayList<>();
+        List<String> output = Collections.synchronizedList(new ArrayList<>());
 
         // discord
         /*
@@ -176,7 +174,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                         return;
                     }
                 } else {
-                    if (general().fallbackToUsernameOnRemove) {
+                    if (general().remove.fallbackToUsernameOnRemove) {
                         output.add(discordManager.appendWarning(
                                 MessageFormatter.format(
                                         lang().remove.linkWarningNotLinkedFallback,
@@ -203,40 +201,44 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         }
 
         // whitelist
-        if (whitelistManager.removeFromWhitelist(username)) {
-            output.add(discordManager.appendWarning(
-                    MessageFormatter.format(
-                            lang().remove.whitelistWarningAlready,
-                            "username", username
-                    )
-            ));
-        } else {
-            output.add(discordManager.appendSuccess(
-                    MessageFormatter.format(
-                            lang().remove.whitelistSuccess,
-                            "username", username
-                    )
-            ));
+        if (general().remove.removeFromWhitelist) {
+            if (whitelistManager.removeFromWhitelist(username)) {
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().remove.whitelistWarningAlready,
+                                "username", username
+                        )
+                ));
+            } else {
+                output.add(discordManager.appendSuccess(
+                        MessageFormatter.format(
+                                lang().remove.whitelistSuccess,
+                                "username", username
+                        )
+                ));
+            }
         }
 
         // server kick
-        final String tempUser = username;
-        Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
-            var player = Bukkit.getPlayer(tempUser);
-            if (player != null) {
-                player.kick(lang().remove.kickMessage);
-            }
-        });
+        if (general().remove.kickFromServerIfOnline) {
+            final String tempUser = username;
+            Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
+                var player = Bukkit.getPlayer(tempUser);
+                if (player != null) {
+                    player.kick(lang().remove.kickMessage);
+                }
+            });
+        }
 
         // ban message
         var guild = member.getGuild();
-        if (general().sendBanMessage) {
-            var banChannel = guild.getTextChannelById(general().bansChannelId);
+        if (general().remove.sendBanMessage) {
+            var banChannel = guild.getTextChannelById(general().remove.bansChannelId);
             if (banChannel == null) {
                 output.add(discordManager.appendWarning(
                         MessageFormatter.format(
                                 lang().general.channelNotFound,
-                                "channel_id", general().bansChannelId
+                                "channel_id", general().remove.bansChannelId
                         )
                 ));
             } else {
@@ -276,7 +278,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                 output.add(discordManager.appendSuccess(
                         MessageFormatter.format(
                                 lang().remove.banMessageSuccess,
-                                "channel_id", general().bansChannelId
+                                "channel_id", general().remove.bansChannelId
                         )
                 ));
             }
@@ -324,16 +326,18 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         }
 
         // ban
-        discordManager.banMember(member, lang().remove.guildBanReason);
-        output.add(discordManager.appendSuccess(
-                MessageFormatter.format(
-                        lang().remove.guildBanSuccess,
-                        "discord_mention", member.getAsMention(),
-                        "discord_username", member.getUser().getAsTag(),
-                        "discord_name", member.getEffectiveName(),
-                        "discord_id", member.getId()
-                )
-        ));
+        if (general().remove.banOnDiscordServer) {
+            discordManager.banMember(member, lang().remove.guildBanReason);
+            output.add(discordManager.appendSuccess(
+                    MessageFormatter.format(
+                            lang().remove.guildBanSuccess,
+                            "discord_mention", member.getAsMention(),
+                            "discord_username", member.getUser().getAsTag(),
+                            "discord_name", member.getEffectiveName(),
+                            "discord_id", member.getId()
+                    )
+            ));
+        }
 
         // success
         if (dmFuture != null) {

@@ -74,6 +74,27 @@ public class ConfigContainer {
         }
     }
 
+    private <T> void saveConfiguration(T configInstance, Class<T> configClass, String fileName, TypeSerializerCollection serializers) {
+        File configFile = new File(dataFolder, fileName);
+        Path configPath = configFile.toPath();
+
+        YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
+                .path(configPath)
+                .defaultOptions(opts -> opts.serializers(serializersInner -> serializersInner.registerAll(serializers)))
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(2)
+                .build();
+
+        try {
+            CommentedConfigurationNode node = loader.createNode();
+            ObjectMapper.factory().get(configClass).save(configInstance, node);
+            loader.save(node);
+        } catch (ConfigurateException error) {
+            System.err.println("Error saving configuration: " + fileName);
+            error.printStackTrace();
+        }
+    }
+
     public void loadConfigs() {
         TypeSerializerCollection generalSerializers = TypeSerializerCollection.builder()
                 .build();
@@ -82,7 +103,24 @@ public class ConfigContainer {
         TypeSerializerCollection languageSerializers = TypeSerializerCollection.builder()
                 .register(Component.class, new ComponentSerializer())
                 .build();
+
+        generateLanguageTemplates(languageSerializers);
         languageConfig = loadConfiguration(LanguageConfig.class, "language.yml", languageSerializers);
+    }
+
+    private void generateLanguageTemplates(TypeSerializerCollection serializers) {
+        File russianFile = new File(dataFolder, "language.yml.russian");
+        File englishFile = new File(dataFolder, "language.yml");
+
+        if (!russianFile.exists()) {
+            LanguageConfig russianConfig = LanguageConfig.createRussian();
+            saveConfiguration(russianConfig, LanguageConfig.class, "language.russian.yml", serializers);
+        }
+
+        if (!englishFile.exists()) {
+            LanguageConfig englishConfig = LanguageConfig.createEnglish();
+            saveConfiguration(englishConfig, LanguageConfig.class, "language.yml", serializers);
+        }
     }
 
     public void reloadConfigs() {

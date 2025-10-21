@@ -14,6 +14,7 @@ import me.animepdf.dew.managers.LinkManager;
 import me.animepdf.dew.managers.WhitelistManager;
 import me.animepdf.dew.util.BukkitUtils;
 import me.animepdf.dew.util.MessageFormatter;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -160,7 +161,17 @@ public class DiscordListener extends ListenerAdapter {
                         }
                     }
 
-                    if (general().leave.banOnDiscordServer) {
+                    if (general().leave.kickFromGameIfOnline && username != null) {
+                        final String tempUser = username;
+                        Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
+                            var player = Bukkit.getPlayer(tempUser);
+                            if (player != null) {
+                                player.kick(lang().leave.kickMessage);
+                            }
+                        });
+                    }
+
+                    if (general().leave.banFromGuild) {
                         if (isBan.get()) {
                             output.add(discordManager.appendWarning(
                                     MessageFormatter.format(
@@ -175,7 +186,7 @@ public class DiscordListener extends ListenerAdapter {
                             discordManager.banUser(guild, user, lang().leave.guildBanReason);
                             output.add(discordManager.appendSuccess(
                                     MessageFormatter.format(
-                                            lang().leave.reportBannedFromServer,
+                                            lang().leave.reportBannedFromGuild,
                                             "discord_mention", user.getAsMention(),
                                             "discord_username", user.getAsTag(),
                                             "discord_name", user.getEffectiveName(),
@@ -219,7 +230,7 @@ public class DiscordListener extends ListenerAdapter {
                             }
                             output.add(discordManager.appendSuccess(
                                     MessageFormatter.format(
-                                            lang().leave.reportMessageSent,
+                                            lang().leave.reportMessageSuccess,
                                             "channel_id", general().leave.leaveChannelId
                                     )
                             ));
@@ -227,7 +238,7 @@ public class DiscordListener extends ListenerAdapter {
                     }
 
                     CompletableFuture<Void> dmFuture = null;
-                    if (general().leave.sendDirectLeaveMessage) {
+                    if (general().leave.sendDirectMessage) {
                         dmFuture = user.openPrivateChannel().submit()
                                 .thenCompose(privateChannel -> {
                                     return privateChannel.sendMessage(String.join("\n", lang().leave.leaveDirectMessage)).submit();
@@ -235,7 +246,7 @@ public class DiscordListener extends ListenerAdapter {
                                 .thenAccept(message -> {
                                     output.add(discordManager.appendSuccess(
                                             MessageFormatter.format(
-                                                    lang().leave.reportDirectMessageSent,
+                                                    lang().leave.reportDirectMessageSuccess,
                                                     "discord_mention", user.getAsMention(),
                                                     "discord_username", user.getAsTag(),
                                                     "discord_name", user.getEffectiveName(),
@@ -246,7 +257,7 @@ public class DiscordListener extends ListenerAdapter {
                                 .exceptionally(throwable -> {
                                     output.add(discordManager.appendWarning(
                                             MessageFormatter.format(
-                                                    lang().leave.reportWarningDirectMessagesClosed,
+                                                    lang().leave.reportWarningDirectMessagesFailure,
                                                     "discord_mention", user.getAsMention(),
                                                     "discord_username", user.getAsTag(),
                                                     "discord_name", user.getEffectiveName(),

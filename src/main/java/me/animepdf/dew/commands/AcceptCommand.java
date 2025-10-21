@@ -150,7 +150,7 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
             discordManager.changeName(member, username);
             output.add(discordManager.appendSuccess(
                     MessageFormatter.format(
-                            lang().accept.discordNameSuccess,
+                            lang().accept.guildNameSuccess,
                             "discord_mention", member.getAsMention(),
                             "discord_username", member.getUser().getAsTag(),
                             "discord_name", member.getEffectiveName(),
@@ -173,7 +173,7 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
             }
             output.add(discordManager.appendSuccess(
                     MessageFormatter.format(
-                            lang().accept.discordRoleRemoveSuccess,
+                            lang().accept.guildRoleRemoveSuccess,
                             "discord_mention", member.getAsMention(),
                             "discord_username", member.getUser().getAsTag(),
                             "discord_name", member.getEffectiveName(),
@@ -196,7 +196,7 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
             }
             output.add(discordManager.appendSuccess(
                     MessageFormatter.format(
-                            lang().accept.discordRoleAddSuccess,
+                            lang().accept.guildRoleAddSuccess,
                             "discord_mention", member.getAsMention(),
                             "discord_username", member.getUser().getAsTag(),
                             "discord_name", member.getEffectiveName(),

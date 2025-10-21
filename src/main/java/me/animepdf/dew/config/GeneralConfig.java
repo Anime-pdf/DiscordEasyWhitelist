@@ -6,8 +6,8 @@ import java.util.List;
 
 @ConfigSerializable
 public class GeneralConfig {
-    public boolean enableLinking = false;
-    public List<String> moderatorRoleIds = List.of("0000000000000000000", "0000000000000000000");
+    public boolean enableLinking = true;
+    public List<String> moderatorRoles = List.of("0000000000000000000", "0000000000000000000");
 
     @ConfigSerializable
     public static class AcceptOptions {
@@ -27,13 +27,13 @@ public class GeneralConfig {
 
     @ConfigSerializable
     public static class RemoveOptions {
-        public boolean fallbackToUsernameOnRemove = false;
+        public boolean fallbackToGuildUsername = false;
         public boolean removeFromWhitelist = true;
-        public boolean kickFromServerIfOnline = true;
-        public boolean sendBanMessage = true;
-        public String bansChannelId = "0000000000000000000";
-        public boolean sendDirectBanMessage = true;
-        public boolean banOnDiscordServer = true;
+        public boolean kickFromGameIfOnline = true;
+        public boolean sendRemoveMessage = true;
+        public String removeChannelId = "0000000000000000000";
+        public boolean sendDirectMessage = true;
+        public boolean banFromGuild = true;
 
         public RemoveOptions() {
         }
@@ -45,10 +45,11 @@ public class GeneralConfig {
         public boolean enable = false;
         public boolean unlinkIfAvailable = true;
         public boolean removeFromWhitelist = true;
-        public boolean banOnDiscordServer = true;
+        public boolean kickFromGameIfOnline = true;
+        public boolean banFromGuild = true;
         public boolean sendLeaveMessage = true;
         public String leaveChannelId = "0000000000000000000";
-        public boolean sendDirectLeaveMessage = true;
+        public boolean sendDirectMessage = true;
         public boolean sendReportMessage = true;
         public String reportChannelId = "0000000000000000000";
 

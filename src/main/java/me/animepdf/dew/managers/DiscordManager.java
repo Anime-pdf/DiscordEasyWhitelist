@@ -38,7 +38,7 @@ public class DiscordManager {
 
     public boolean hasModPermission(@NotNull Member member) {
         for (Role role : member.getRoles()) {
-            if (this.configContainer.getGeneralConfig().moderatorRoleIds.contains(role.getId())) {
+            if (this.configContainer.getGeneralConfig().moderatorRoles.contains(role.getId())) {
                 return true;
             }
         }

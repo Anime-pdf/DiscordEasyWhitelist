@@ -174,7 +174,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                         return;
                     }
                 } else {
-                    if (general().remove.fallbackToUsernameOnRemove) {
+                    if (general().remove.fallbackToGuildUsername) {
                         output.add(discordManager.appendWarning(
                                 MessageFormatter.format(
                                         lang().remove.linkWarningNotLinkedFallback,
@@ -220,7 +220,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         }
 
         // server kick
-        if (general().remove.kickFromServerIfOnline) {
+        if (general().remove.kickFromGameIfOnline) {
             final String tempUser = username;
             Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
                 var player = Bukkit.getPlayer(tempUser);
@@ -232,13 +232,13 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
 
         // ban message
         var guild = member.getGuild();
-        if (general().remove.sendBanMessage) {
-            var banChannel = guild.getTextChannelById(general().remove.bansChannelId);
+        if (general().remove.sendRemoveMessage) {
+            var banChannel = guild.getTextChannelById(general().remove.removeChannelId);
             if (banChannel == null) {
                 output.add(discordManager.appendWarning(
                         MessageFormatter.format(
                                 lang().general.channelNotFound,
-                                "channel_id", general().remove.bansChannelId
+                                "channel_id", general().remove.removeChannelId
                         )
                 ));
             } else {
@@ -246,7 +246,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                 if (reason != null) {
                     banChannel.sendMessage(
                             MessageFormatter.format(
-                                    String.join("\n", lang().remove.banMessageReason),
+                                    String.join("\n", lang().remove.removeMessageReason),
                                     "discord_mention", member.getAsMention(),
                                     "discord_username", member.getUser().getAsTag(),
                                     "discord_name", member.getEffectiveName(),
@@ -262,7 +262,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                 } else {
                     banChannel.sendMessage(
                             MessageFormatter.format(
-                                    String.join("\n", lang().remove.banMessage),
+                                    String.join("\n", lang().remove.removeMessage),
                                     "discord_mention", member.getAsMention(),
                                     "discord_username", member.getUser().getAsTag(),
                                     "discord_name", member.getEffectiveName(),
@@ -277,8 +277,8 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                 }
                 output.add(discordManager.appendSuccess(
                         MessageFormatter.format(
-                                lang().remove.banMessageSuccess,
-                                "channel_id", general().remove.bansChannelId
+                                lang().remove.removeMessageSuccess,
+                                "channel_id", general().remove.removeChannelId
                         )
                 ));
             }
@@ -286,24 +286,24 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
 
         // direct message
         CompletableFuture<Void> dmFuture = null;
-        if (general().remove.sendDirectBanMessage) {
+        if (general().remove.sendDirectMessage) {
             dmFuture = member.getUser().openPrivateChannel().submit()
                     .thenCompose(privateChannel -> {
                         if (reason != null) {
                             return privateChannel.sendMessage(
                                     MessageFormatter.format(
-                                            String.join("\n", lang().remove.banDirectMessageReason),
+                                            String.join("\n", lang().remove.removeDirectMessageReason),
                                             "reason", reason
                                     )
                             ).submit();
                         } else {
-                            return privateChannel.sendMessage(String.join("\n", lang().remove.banDirectMessage)).submit();
+                            return privateChannel.sendMessage(String.join("\n", lang().remove.removeDirectMessage)).submit();
                         }
                     })
                     .thenAccept(message -> {
                         output.add(discordManager.appendSuccess(
                                 MessageFormatter.format(
-                                        lang().remove.banDirectMessageSuccess,
+                                        lang().remove.removeDirectMessageSuccess,
                                         "discord_mention", member.getAsMention(),
                                         "discord_username", member.getUser().getAsTag(),
                                         "discord_name", member.getEffectiveName(),
@@ -314,7 +314,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                     .exceptionally(throwable -> {
                         output.add(discordManager.appendWarning(
                                 MessageFormatter.format(
-                                        lang().remove.banDirectMessageFailure,
+                                        lang().remove.removeDirectMessageFailure,
                                         "discord_mention", member.getAsMention(),
                                         "discord_username", member.getUser().getAsTag(),
                                         "discord_name", member.getEffectiveName(),
@@ -326,7 +326,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         }
 
         // ban
-        if (general().remove.banOnDiscordServer) {
+        if (general().remove.banFromGuild) {
             discordManager.banMember(member, lang().remove.guildBanReason);
             output.add(discordManager.appendSuccess(
                     MessageFormatter.format(

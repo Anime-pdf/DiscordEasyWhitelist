@@ -37,10 +37,10 @@ public class LanguageConfig {
         public String whitelistWarningAlready = "Ник `{username}` уже присутствует в вайт-листе";
         public String whitelistSuccess = "Ник `{username}` добавлен в вайт-лист";
 
-        public String discordNameSuccess = "Имя {discord_mention} было изменено на `{username}`";
+        public String guildNameSuccess = "Имя {discord_mention} было изменено на `{username}`";
 
-        public String discordRoleRemoveSuccess = "Роли {roles} были удалены";
-        public String discordRoleAddSuccess = "Роли {roles} были добавлены";
+        public String guildRoleRemoveSuccess = "Роли {roles} были удалены";
+        public String guildRoleAddSuccess = "Роли {roles} были добавлены";
 
         public List<String> welcomeMessage = List.of(
                 "{discord_mention}, добро пожаловать!",
@@ -72,22 +72,22 @@ public class LanguageConfig {
 
         public Component kickMessage = Component.text("Вы были удалены из вайт-листа", NamedTextColor.RED);
 
-        public List<String> banMessage = List.of(
+        public List<String> removeMessage = List.of(
                 "{discord_mention} (`{username}`) был забанен"
         );
-        public List<String> banMessageReason = List.of(
+        public List<String> removeMessageReason = List.of(
                 "{discord_mention} (`{username}`) был забанен по причине: \"{reason}\""
         );
-        public String banMessageSuccess = "В <#{channel_id}> отправлено сообщение о бане";
+        public String removeMessageSuccess = "В <#{channel_id}> отправлено сообщение о бане";
 
-        public List<String> banDirectMessage = List.of(
+        public List<String> removeDirectMessage = List.of(
                 "Вы были забанены на сервере"
         );
-        public List<String> banDirectMessageReason = List.of(
+        public List<String> removeDirectMessageReason = List.of(
                 "Вы были забанены на сервере по причине: \"{reason}\""
         );
-        public String banDirectMessageSuccess = "{discord_mention} отправлено личное сообщение";
-        public String banDirectMessageFailure = "У {discord_mention} закрыты личные сообщения, сообщение не отправлено";
+        public String removeDirectMessageSuccess = "{discord_mention} отправлено личное сообщение";
+        public String removeDirectMessageFailure = "У {discord_mention} закрыты личные сообщения, сообщение не отправлено";
 
         public String guildBanReason = "Забанен DEW";
         public String guildBanSuccess = "{discord_mention} забанен на сервере";
@@ -172,16 +172,19 @@ public class LanguageConfig {
         public String reportWarningNameNotResolved = "Игрок ни разу не заходил на сервер, нельзя вычислить ник";
         public String reportUnlinkedNameNotResolved = "Аккаунт был отвязан от UUID `{uuid}`";
         public String reportUnlinked = "Аккаунт был отвязан от `{username}`";
+
         public String reportRemovedFromWhitelist = "`{username}` был удалён из вайт-листа";
         public String reportWarningNotInWhitelist = "`{username}` и так не присутствовал в вайт-лист";
 
-        public String reportBannedFromServer = "{discord_mention} был забанен на сервере";
+        public Component kickMessage = Component.text("Вы были удалены из вайт-листа", NamedTextColor.RED);
+
+        public String reportBannedFromGuild = "{discord_mention} был забанен на сервере";
         public String reportWarningAlreadyBanned = "{discord_mention} уже забанен на сервере";
 
-        public String reportMessageSent = "Сообщение о выходе было отправлено в <#{channel_id}>";
+        public String reportMessageSuccess = "Сообщение о выходе было отправлено в <#{channel_id}>";
 
-        public String reportDirectMessageSent = "{discord_mention} отправлено личное сообщение";
-        public String reportWarningDirectMessagesClosed = "У {discord_mention} закрыты личные сообщения, сообщение не отправлено";
+        public String reportDirectMessageSuccess = "{discord_mention} отправлено личное сообщение";
+        public String reportWarningDirectMessagesFailure = "У {discord_mention} закрыты личные сообщения, сообщение не отправлено";
 
         public LeaveMessages() {
         }

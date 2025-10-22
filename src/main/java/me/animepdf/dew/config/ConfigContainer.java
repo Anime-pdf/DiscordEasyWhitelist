@@ -109,17 +109,17 @@ public class ConfigContainer {
     }
 
     private void generateLanguageTemplates(TypeSerializerCollection serializers) {
-        File russianFile = new File(dataFolder, "language.yml.russian");
+        File russianFile = new File(dataFolder, "language.russian.yml");
         File englishFile = new File(dataFolder, "language.yml");
 
         if (!russianFile.exists()) {
             LanguageConfig russianConfig = LanguageConfig.createRussian();
-            saveConfiguration(russianConfig, LanguageConfig.class, "language.russian.yml", serializers);
+            saveConfiguration(russianConfig, LanguageConfig.class, russianFile.getName(), serializers);
         }
 
         if (!englishFile.exists()) {
             LanguageConfig englishConfig = LanguageConfig.createEnglish();
-            saveConfiguration(englishConfig, LanguageConfig.class, "language.yml", serializers);
+            saveConfiguration(englishConfig, LanguageConfig.class, englishFile.getName(), serializers);
         }
     }
 

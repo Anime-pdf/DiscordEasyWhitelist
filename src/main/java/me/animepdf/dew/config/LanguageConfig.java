@@ -232,7 +232,7 @@ public class LanguageConfig {
         config.accept.linkWarningAlreadyOthers = "Nickname or user are already linked to someone else, try unlinking them first";
         config.accept.linkWarningAlreadySame = "{discord_mention} already linked to `{username}`";
         config.accept.linkSuccess = "{discord_mention} was linked to `{username}`";
-        config.accept.whitelistWarningAlready = "Nickname `{username}` already persists in whitelist";
+        config.accept.whitelistWarningAlready = "Nickname `{username}` already persists in the whitelist";
         config.accept.whitelistSuccess = "Nickname `{username}` was added to the whitelist";
         config.accept.guildNameSuccess = "{discord_mention}'s guild name was changed to `{username}`";
         config.accept.guildRoleRemoveSuccess = "Roles {roles} were removed";
@@ -255,8 +255,8 @@ public class LanguageConfig {
         config.remove.linkWarningNotLinkedFallback = "{discord_mention} isn't linked to any nickname, falling back to `{fallback}`";
         config.remove.linkSuccess = "{discord_mention} was unlinked from `{username}`";
         config.remove.whitelistWarningAlready = "Whitelist already doesn't contain `{username}`";
-        config.remove.whitelistSuccess = "Nickname `{username}` was removed from whitelist";
-        config.remove.kickMessage = Component.text("You was removed from whitelist", NamedTextColor.RED);
+        config.remove.whitelistSuccess = "Nickname `{username}` was removed from the whitelist";
+        config.remove.kickMessage = Component.text("You was removed from the whitelist", NamedTextColor.RED);
         config.remove.removeMessage = List.of("{discord_mention} (`{username}`) was banned");
         config.remove.removeMessageReason = List.of("{discord_mention} (`{username}`) was banned with the reason: \"{reason}\"");
         config.remove.removeMessageSuccess = "Remove message was sent into <#{channel_id}>";
@@ -299,16 +299,16 @@ public class LanguageConfig {
         // Leave
         config.leave.leaveMessage = List.of("{discord_mention} (`{username}`) left the server and faced consequences 💀");
         config.leave.leaveMessageNameNotResolved = List.of("{discord_mention} left the server and faced consequences 💀");
-        config.leave.leaveDirectMessage = List.of("You left the server and was removed from whitelist");
+        config.leave.leaveDirectMessage = List.of("You left the server and was removed from the whitelist");
         config.leave.guildBanReason = "Banned by DEW";
         config.leave.reportMessage = "{discord_mention} left the server!\n{report}";
         config.leave.reportWarningNotLinked = "User wasn't linked to any nickname";
         config.leave.reportWarningNameNotResolved = "Player didn't join server once, can't retrieve his nickname";
         config.leave.reportUnlinkedNameNotResolved = "User was unlinked from UUID `{uuid}`";
         config.leave.reportUnlinked = "User was unlinked from `{username}`";
-        config.leave.reportRemovedFromWhitelist = "`{username}` was removed from whitelist";
+        config.leave.reportRemovedFromWhitelist = "`{username}` was removed from the whitelist";
         config.leave.reportWarningNotInWhitelist = "Whitelist already didn't contain `{username}`";
-        config.leave.kickMessage = Component.text("You was removed from whitelist", NamedTextColor.RED);
+        config.leave.kickMessage = Component.text("You was removed from the whitelist", NamedTextColor.RED);
         config.leave.reportBannedFromGuild = "{discord_mention} was banned from the server";
         config.leave.reportWarningAlreadyBanned = "{discord_mention} was already banned from the server";
         config.leave.reportMessageSuccess = "Leave message was sent into <#{channel_id}>";

@@ -98,7 +98,7 @@ public class ConfigContainer {
     public void loadConfigs() {
         TypeSerializerCollection generalSerializers = TypeSerializerCollection.builder()
                 .build();
-        generalConfig = loadConfiguration(GeneralConfig.class, "config.yml", generalSerializers);
+        generalConfig = loadConfiguration(GeneralConfig.class, "general.yml", generalSerializers);
 
         TypeSerializerCollection languageSerializers = TypeSerializerCollection.builder()
                 .register(Component.class, new ComponentSerializer())

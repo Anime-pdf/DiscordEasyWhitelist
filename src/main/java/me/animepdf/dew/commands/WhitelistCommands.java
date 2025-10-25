@@ -23,14 +23,14 @@ public class WhitelistCommands extends DEWComponent implements SlashCommandProvi
     public Set<PluginSlashCommand> getSlashCommands() {
         return Set.of(
                 new PluginSlashCommand(this.plugin, new CommandData("whitelist", "Manipulate whitelist")
-                        .addSubcommands(new SubcommandData("check", "Check if username is in whitelist")
-                                .addOption(OptionType.STRING, "username", "Username to check", true)
+                        .addSubcommands(new SubcommandData("check", "Check if nickname is in whitelist")
+                                .addOption(OptionType.STRING, "nickname", "Nickname to check", true)
                         )
-                        .addSubcommands(new SubcommandData("add", "Add username to the whitelist")
-                                .addOption(OptionType.STRING, "username", "Minecraft username to add to whitelist", true)
+                        .addSubcommands(new SubcommandData("add", "Add nickname to the whitelist")
+                                .addOption(OptionType.STRING, "nickname", "Minecraft nickname to add to whitelist", true)
                         )
-                        .addSubcommands(new SubcommandData("remove", "Remove username from the whitelist")
-                                .addOption(OptionType.STRING, "username", "Minecraft username to remove from whitelist", true)
+                        .addSubcommands(new SubcommandData("remove", "Remove nickname from the whitelist")
+                                .addOption(OptionType.STRING, "nickname", "Minecraft nickname to remove from whitelist", true)
                         )
                 )
         );
@@ -39,42 +39,49 @@ public class WhitelistCommands extends DEWComponent implements SlashCommandProvi
     @SlashCommand(path = "whitelist/check", deferReply = true, deferEphemeral = true)
     public void whitelistCheckCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        String username;
+        if (!general().whitelist.enable) {
+            discordManager.sendError(event,
+                    lang().whitelist.disabled
+            );
+            return;
+        }
+
+        String nickname;
 
         // data integrity
         {
-            var usernameRaw = event.getOption("username");
+            var nicknameRaw = event.getOption("nickname");
 
-            if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
+            if (nicknameRaw == null || nicknameRaw.getAsString().isEmpty()) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "whitelist/check",
-                                "arg", "username")
+                                "arg", "nickname")
                 );
                 return;
             }
-            username = usernameRaw.getAsString().strip();
+            nickname = nicknameRaw.getAsString().strip();
         }
 
         // whitelist
-        if (whitelistManager.isInWhitelist(username)) {
+        if (whitelistManager.isInWhitelist(nickname)) {
             discordManager.sendSuccess(event,
                     MessageFormatter.format(
-                            lang().whitelist.containsUsername,
-                            "username", username
+                            lang().whitelist.containsNickname,
+                            "nickname", nickname
                     )
             );
         } else {
             discordManager.sendError(event,
                     MessageFormatter.format(
-                            lang().whitelist.notContainsUsername,
-                            "username", username
+                            lang().whitelist.notContainsNickname,
+                            "nickname", nickname
                     )
             );
         }
@@ -83,42 +90,49 @@ public class WhitelistCommands extends DEWComponent implements SlashCommandProvi
     @SlashCommand(path = "whitelist/add", deferReply = true, deferEphemeral = true)
     public void whitelistAddCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        String username;
+        if (!general().whitelist.enable) {
+            discordManager.sendError(event,
+                    lang().whitelist.disabled
+            );
+            return;
+        }
+
+        String nickname;
 
         // data integrity
         {
-            var usernameRaw = event.getOption("username");
+            var nicknameRaw = event.getOption("nickname");
 
-            if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
+            if (nicknameRaw == null || nicknameRaw.getAsString().isEmpty()) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "whitelist/add",
-                                "arg", "username")
+                                "arg", "nickname")
                 );
                 return;
             }
-            username = usernameRaw.getAsString().strip();
+            nickname = nicknameRaw.getAsString().strip();
         }
 
         // whitelist
-        if (whitelistManager.addToWhitelist(username)) {
+        if (whitelistManager.addToWhitelist(nickname)) {
             discordManager.sendError(event,
                     MessageFormatter.format(
-                            lang().whitelist.notAddedUsername,
-                            "username", username
+                            lang().whitelist.notAddedNickname,
+                            "nickname", nickname
                     )
             );
         } else {
             discordManager.sendSuccess(event,
                     MessageFormatter.format(
-                            lang().whitelist.addedUsername,
-                            "username", username
+                            lang().whitelist.addedNickname,
+                            "nickname", nickname
                     )
             );
         }
@@ -127,48 +141,55 @@ public class WhitelistCommands extends DEWComponent implements SlashCommandProvi
     @SlashCommand(path = "whitelist/remove", deferReply = true, deferEphemeral = true)
     public void whitelistRemoveCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        String username;
+        if (!general().whitelist.enable) {
+            discordManager.sendError(event,
+                    lang().whitelist.disabled
+            );
+            return;
+        }
+
+        String nickname;
 
         // data integrity
         {
-            var usernameRaw = event.getOption("username");
+            var nicknameRaw = event.getOption("nickname");
 
-            if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
+            if (nicknameRaw == null || nicknameRaw.getAsString().isEmpty()) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "whitelist/remove",
-                                "arg", "username")
+                                "arg", "nickname")
                 );
                 return;
             }
-            username = usernameRaw.getAsString().strip();
+            nickname = nicknameRaw.getAsString().strip();
         }
 
         // whitelist
-        if (whitelistManager.removeFromWhitelist(username)) {
+        if (whitelistManager.removeFromWhitelist(nickname)) {
             discordManager.sendError(event,
                     MessageFormatter.format(
-                            lang().whitelist.notRemovedUsername,
-                            "username", username
+                            lang().whitelist.notRemovedNickname,
+                            "nickname", nickname
                     )
             );
         } else {
             discordManager.sendSuccess(event,
                     MessageFormatter.format(
-                            lang().whitelist.removedUsername,
-                            "username", username
+                            lang().whitelist.removedNickname,
+                            "nickname", nickname
                     )
             );
 
             // server kick
             Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
-                var player = Bukkit.getPlayer(username);
+                var player = Bukkit.getPlayer(nickname);
                 if (player != null) {
                     player.kick(lang().remove.kickMessage);
                 }

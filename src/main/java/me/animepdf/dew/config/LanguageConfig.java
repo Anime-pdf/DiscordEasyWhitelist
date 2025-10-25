@@ -22,6 +22,7 @@ public class LanguageConfig {
         public String tooManyCommandArguments = "Слишком много аргументов";
         public String onlyOnServer = "Эта команда может быть использована только на сервере";
         public String channelNotFound = "Канал `{channel_id}` не найден, сообщение не будет отправлено";
+        public String userNotOnServer = "{discord_mention} не находится на сервере";
 
         public GeneralMessages() {
         }
@@ -30,14 +31,15 @@ public class LanguageConfig {
 
     @ConfigSerializable
     public static class AcceptMessages {
+        public String disabled = "Этот функционал выключен";
         public String linkWarningAlreadyOthers = "Ник или аккаунт уже привязаны к кому-то другому, сначала отвяжите их";
-        public String linkWarningAlreadySame = "{discord_mention} уже привязан к `{username}`";
-        public String linkSuccess = "{discord_mention} был привязан к `{username}`";
+        public String linkWarningAlreadySame = "{discord_mention} уже привязан к `{nickname}`";
+        public String linkSuccess = "{discord_mention} был привязан к `{nickname}`";
 
-        public String whitelistWarningAlready = "Ник `{username}` уже присутствует в вайт-листе";
-        public String whitelistSuccess = "Ник `{username}` добавлен в вайт-лист";
+        public String whitelistWarningAlready = "Ник `{nickname}` уже присутствует в вайт-листе";
+        public String whitelistSuccess = "Ник `{nickname}` добавлен в вайт-лист";
 
-        public String guildNameSuccess = "Имя {discord_mention} было изменено на `{username}`";
+        public String guildNameSuccess = "Имя {discord_mention} было изменено на `{nickname}`";
 
         public String guildRoleRemoveSuccess = "Роли {roles} были удалены";
         public String guildRoleAddSuccess = "Роли {roles} были добавлены";
@@ -60,23 +62,24 @@ public class LanguageConfig {
 
     @ConfigSerializable
     public static class RemoveMessages {
+        public String disabled = "Этот функционал выключен";
         public String linkErrorOther = "Ник или аккаунт уже привязаны к кому-то другому, сначала отвяжите их";
         public String linkErrorNeverPlayed = "{discord_mention} никогда не заходил на сервер, невозможно получить ник, укажите его вручную";
         public String linkErrorNotLinked = "{discord_mention} не привязан к какому-либо нику";
         public String linkWarningNotLinked = "{discord_mention} не привязан к указанному нику";
         public String linkWarningNotLinkedFallback = "{discord_mention} не привязан к какому-либо нику. Использую `{fallback}`";
-        public String linkSuccess = "{discord_mention} был отвязан от `{username}`";
+        public String linkSuccess = "{discord_mention} был отвязан от `{nickname}`";
 
-        public String whitelistWarningAlready = "Ник `{username}` и так не присутствует в вайт-листе";
-        public String whitelistSuccess = "Ник `{username}` удалён из вайт-листа";
+        public String whitelistWarningAlready = "Ник `{nickname}` и так не присутствует в вайт-листе";
+        public String whitelistSuccess = "Ник `{nickname}` удалён из вайт-листа";
 
         public Component kickMessage = Component.text("Вы были удалены из вайт-листа", NamedTextColor.RED);
 
         public List<String> removeMessage = List.of(
-                "{discord_mention} (`{username}`) был забанен"
+                "{discord_mention} (`{nickname}`) был забанен"
         );
         public List<String> removeMessageReason = List.of(
-                "{discord_mention} (`{username}`) был забанен по причине: \"{reason}\""
+                "{discord_mention} (`{nickname}`) был забанен по причине: \"{reason}\""
         );
         public String removeMessageSuccess = "В <#{channel_id}> отправлено сообщение о бане";
 
@@ -101,14 +104,15 @@ public class LanguageConfig {
 
     @ConfigSerializable
     public static class WhitelistMessages {
-        public String containsUsername = "Ник `{username}` присутствует в вайт-листе";
-        public String notContainsUsername = "Ник `{username}` не присутствует в вайт-листе";
+        public String disabled = "Этот функционал выключен";
+        public String containsNickname = "Ник `{nickname}` присутствует в вайт-листе";
+        public String notContainsNickname = "Ник `{nickname}` не присутствует в вайт-листе";
 
-        public String addedUsername = "Ник `{username}` добавлен в вайт-лист";
-        public String notAddedUsername = "Ник `{username}` уже есть в вайт-листе";
+        public String addedNickname = "Ник `{nickname}` добавлен в вайт-лист";
+        public String notAddedNickname = "Ник `{nickname}` уже есть в вайт-листе";
 
-        public String removedUsername = "Ник `{username}` удалён из вайт-листа";
-        public String notRemovedUsername = "Ник `{username}` и так не присутствует в вайт-листе";
+        public String removedNickname = "Ник `{nickname}` удалён из вайт-листа";
+        public String notRemovedNickname = "Ник `{nickname}` и так не присутствует в вайт-листе";
 
         public WhitelistMessages() {
         }
@@ -119,24 +123,23 @@ public class LanguageConfig {
     public static class LinkMessages {
         public String disabled = "Этот функционал выключен";
 
-        public String nicknameNotLinked = "`{username}` не привязан к какому-либо аккаунту";
-        public String nicknameLinkedOnServer = "`{username}` привязан к {discord_mention}";
-        public String nicknameLinkedNotOnServer = "`{username}` привязан к {discord_mention}, однако он не на сервере";
+        public String nicknameNotLinked = "`{nickname}` не привязан к какому-либо аккаунту";
+        public String nicknameLinked = "`{nickname}` привязан к {discord_mention}";
 
         public String userNotLinked = "{discord_mention} не привязан к какому-либо нику";
-        public String userLinked = "{discord_mention} привязан к `{username}`";
+        public String userLinked = "{discord_mention} привязан к `{nickname}`";
         public String userLinkedNoNickname = "{discord_mention} привязан к UUID `{uuid}`, игрок ни разу не заходил на сервер, поэтому вычислить ник невозможно";
 
         public String linkWarningAlreadyOthers = "Ник или аккаунт уже привязаны к кому-то другому, сначала отвяжите их";
-        public String linkWarningAlreadySame = "{discord_mention} уже привязан к `{username}`";
-        public String linkSuccess = "{discord_mention} был привязан к `{username}`";
+        public String linkWarningAlreadySame = "{discord_mention} уже привязан к `{nickname}`";
+        public String linkSuccess = "{discord_mention} был привязан к `{nickname}`";
 
-        public String unlinkNicknameNotFound = "`{username}` не привязан к какому-либо аккаунту";
-        public String unlinkNicknameSuccess = "`{username}` был отвязан от {discord_mention}";
+        public String unlinkNicknameNotFound = "`{nickname}` не привязан к какому-либо аккаунту";
+        public String unlinkNicknameSuccess = "`{nickname}` был отвязан от {discord_mention}";
 
         public String unlinkUserNotFound = "{discord_mention} не привязан к какому-либо нику";
         public String unlinkUserSuccessNoNickname = "{discord_mention} был отвязан от UUID `{uuid}`, игрок ни разу не заходил на сервер, поэтому вычислить ник невозможно";
-        public String unlinkUserSuccess = "{discord_mention} был отвязан от `{username}`";
+        public String unlinkUserSuccess = "{discord_mention} был отвязан от `{nickname}`";
 
         public LinkMessages() {
         }
@@ -155,7 +158,7 @@ public class LanguageConfig {
     @ConfigSerializable
     public static class LeaveMessages {
         public List<String> leaveMessage = List.of(
-                "{discord_mention} (`{username}`) вышел с сервера и понёс наказание 💀"
+                "{discord_mention} (`{nickname}`) вышел с сервера и понёс наказание 💀"
         );
         public List<String> leaveMessageNameNotResolved = List.of(
                 "{discord_mention} вышел с сервера и понёс наказание 💀"
@@ -171,10 +174,10 @@ public class LanguageConfig {
         public String reportWarningNotLinked = "Аккаунт не был привязан к какому-либо нику";
         public String reportWarningNameNotResolved = "Игрок ни разу не заходил на сервер, нельзя вычислить ник";
         public String reportUnlinkedNameNotResolved = "Аккаунт был отвязан от UUID `{uuid}`";
-        public String reportUnlinked = "Аккаунт был отвязан от `{username}`";
+        public String reportUnlinked = "Аккаунт был отвязан от `{nickname}`";
 
-        public String reportRemovedFromWhitelist = "`{username}` был удалён из вайт-листа";
-        public String reportWarningNotInWhitelist = "`{username}` и так не присутствовал в вайт-лист";
+        public String reportRemovedFromWhitelist = "`{nickname}` был удалён из вайт-листа";
+        public String reportWarningNotInWhitelist = "`{nickname}` и так не присутствовал в вайт-лист";
 
         public Component kickMessage = Component.text("Вы были удалены из вайт-листа", NamedTextColor.RED);
 
@@ -197,8 +200,8 @@ public class LanguageConfig {
 
         public String statusMessageNoPlayers = "## Игроков онлайн нет";
         public String statusMessage = "## {players_count} игроков онлайн:\n{players}";
-        public String statusEntry = "* {username}";
-        public String statusEntryLinked = "* {username} ({discord_mention})";
+        public String statusEntry = "* {nickname}";
+        public String statusEntryLinked = "* {nickname} ({discord_mention})";
 
         public StatusMessages() {
         }
@@ -227,14 +230,16 @@ public class LanguageConfig {
         config.general.tooManyCommandArguments = "Too many arguments entered";
         config.general.onlyOnServer = "This command can only be used on discord server";
         config.general.channelNotFound = "Channel `{channel_id}` not found, message won't be sent";
+        config.general.userNotOnServer = "{discord_mention} is not in the guild";
 
         // Accept
+        config.accept.disabled = "This functionality is disabled";
         config.accept.linkWarningAlreadyOthers = "Nickname or user are already linked to someone else, try unlinking them first";
-        config.accept.linkWarningAlreadySame = "{discord_mention} already linked to `{username}`";
-        config.accept.linkSuccess = "{discord_mention} was linked to `{username}`";
-        config.accept.whitelistWarningAlready = "Nickname `{username}` already persists in the whitelist";
-        config.accept.whitelistSuccess = "Nickname `{username}` was added to the whitelist";
-        config.accept.guildNameSuccess = "{discord_mention}'s guild name was changed to `{username}`";
+        config.accept.linkWarningAlreadySame = "{discord_mention} already linked to `{nickname}`";
+        config.accept.linkSuccess = "{discord_mention} was linked to `{nickname}`";
+        config.accept.whitelistWarningAlready = "Nickname `{nickname}` already persists in the whitelist";
+        config.accept.whitelistSuccess = "Nickname `{nickname}` was added to the whitelist";
+        config.accept.guildNameSuccess = "{discord_mention}'s guild name was changed to `{nickname}`";
         config.accept.guildRoleRemoveSuccess = "Roles {roles} were removed";
         config.accept.guildRoleAddSuccess = "Roles {roles} were added";
         config.accept.welcomeMessage = List.of(
@@ -248,17 +253,18 @@ public class LanguageConfig {
         config.accept.acceptSuccess = "Logs:\n{report}";
 
         // Remove
+        config.remove.disabled = "This functionality is disabled";
         config.remove.linkErrorOther = "Nickname or user are already linked to someone else, try unlinking them first";
         config.remove.linkErrorNeverPlayed = "{discord_mention} never entered the server, can't resolve their nickname, enter it manually";
         config.remove.linkErrorNotLinked = "{discord_mention} isn't linked to any nickname";
         config.remove.linkWarningNotLinked = "{discord_mention} isn't linked to entered nickname";
         config.remove.linkWarningNotLinkedFallback = "{discord_mention} isn't linked to any nickname, falling back to `{fallback}`";
-        config.remove.linkSuccess = "{discord_mention} was unlinked from `{username}`";
-        config.remove.whitelistWarningAlready = "Whitelist already doesn't contain `{username}`";
-        config.remove.whitelistSuccess = "Nickname `{username}` was removed from the whitelist";
+        config.remove.linkSuccess = "{discord_mention} was unlinked from `{nickname}`";
+        config.remove.whitelistWarningAlready = "Whitelist already doesn't contain `{nickname}`";
+        config.remove.whitelistSuccess = "Nickname `{nickname}` was removed from the whitelist";
         config.remove.kickMessage = Component.text("You was removed from the whitelist", NamedTextColor.RED);
-        config.remove.removeMessage = List.of("{discord_mention} (`{username}`) was banned");
-        config.remove.removeMessageReason = List.of("{discord_mention} (`{username}`) was banned with the reason: \"{reason}\"");
+        config.remove.removeMessage = List.of("{discord_mention} (`{nickname}`) was banned");
+        config.remove.removeMessageReason = List.of("{discord_mention} (`{nickname}`) was banned with the reason: \"{reason}\"");
         config.remove.removeMessageSuccess = "Remove message was sent into <#{channel_id}>";
         config.remove.removeDirectMessage = List.of("You was banned on the server");
         config.remove.removeDirectMessageReason = List.of("You was banned on the server with a reason: \"{reason}\"");
@@ -269,35 +275,35 @@ public class LanguageConfig {
         config.remove.removeSuccess = "Logs:\n{report}";
 
         // Whitelist
-        config.whitelist.containsUsername = "Whitelist contains `{username}`";
-        config.whitelist.notContainsUsername = "Whitelist doesn't contain `{username}`";
-        config.whitelist.addedUsername = "Username `{username}` was added to the whitelist";
-        config.whitelist.notAddedUsername = "Whitelist already contains `{username}`";
-        config.whitelist.removedUsername = "Username `{username}` was removed from the whitelist";
-        config.whitelist.notRemovedUsername = "Whitelist already doesn't contain `{username}`";
+        config.whitelist.disabled = "This functionality is disabled";
+        config.whitelist.containsNickname = "Whitelist contains `{nickname}`";
+        config.whitelist.notContainsNickname = "Whitelist doesn't contain `{nickname}`";
+        config.whitelist.addedNickname = "Nickname `{nickname}` was added to the whitelist";
+        config.whitelist.notAddedNickname = "Whitelist already contains `{nickname}`";
+        config.whitelist.removedNickname = "Nickname `{nickname}` was removed from the whitelist";
+        config.whitelist.notRemovedNickname = "Whitelist already doesn't contain `{nickname}`";
 
         // Link
         config.link.disabled = "This functionality is disabled";
-        config.link.nicknameNotLinked = "`{username}` isn't linked to any user";
-        config.link.nicknameLinkedOnServer = "`{username}` is linked to {discord_mention}";
-        config.link.nicknameLinkedNotOnServer = "`{username}` is linked to {discord_mention}, but he's not on the server";
+        config.link.nicknameNotLinked = "`{nickname}` isn't linked to any user";
+        config.link.nicknameLinked = "`{nickname}` is linked to {discord_mention}";
         config.link.userNotLinked = "{discord_mention} isn't linked to any nickname";
-        config.link.userLinked = "{discord_mention} is linked to `{username}`";
+        config.link.userLinked = "{discord_mention} is linked to `{nickname}`";
         config.link.userLinkedNoNickname = "{discord_mention}  is linked to UUID `{uuid}`, player didn't join server once, can't retrieve his nickname";
         config.link.linkWarningAlreadyOthers = "Nickname or user are already linked to someone else, try unlinking them first";
-        config.link.linkWarningAlreadySame = "{discord_mention} already linked to `{username}`";
-        config.link.linkSuccess = "{discord_mention} was linked to `{username}`";
-        config.link.unlinkNicknameNotFound = "`{username}` isn't linked to any user";
-        config.link.unlinkNicknameSuccess = "`{username}` was unlinked from {discord_mention}";
+        config.link.linkWarningAlreadySame = "{discord_mention} already linked to `{nickname}`";
+        config.link.linkSuccess = "{discord_mention} was linked to `{nickname}`";
+        config.link.unlinkNicknameNotFound = "`{nickname}` isn't linked to any user";
+        config.link.unlinkNicknameSuccess = "`{nickname}` was unlinked from {discord_mention}";
         config.link.unlinkUserNotFound = "{discord_mention} isn't linked to any nickname";
         config.link.unlinkUserSuccessNoNickname = "{discord_mention} was unlinked from UUID `{uuid}`, player didn't join server once, can't retrieve his nickname";
-        config.link.unlinkUserSuccess = "{discord_mention} was unlinked from `{username}`";
+        config.link.unlinkUserSuccess = "{discord_mention} was unlinked from `{nickname}`";
 
         // Reload
         config.reload.reloaded = "Config reloaded";
 
         // Leave
-        config.leave.leaveMessage = List.of("{discord_mention} (`{username}`) left the server and faced consequences 💀");
+        config.leave.leaveMessage = List.of("{discord_mention} (`{nickname}`) left the server and faced consequences 💀");
         config.leave.leaveMessageNameNotResolved = List.of("{discord_mention} left the server and faced consequences 💀");
         config.leave.leaveDirectMessage = List.of("You left the server and was removed from the whitelist");
         config.leave.guildBanReason = "Banned by DEW";
@@ -305,9 +311,9 @@ public class LanguageConfig {
         config.leave.reportWarningNotLinked = "User wasn't linked to any nickname";
         config.leave.reportWarningNameNotResolved = "Player didn't join server once, can't retrieve his nickname";
         config.leave.reportUnlinkedNameNotResolved = "User was unlinked from UUID `{uuid}`";
-        config.leave.reportUnlinked = "User was unlinked from `{username}`";
-        config.leave.reportRemovedFromWhitelist = "`{username}` was removed from the whitelist";
-        config.leave.reportWarningNotInWhitelist = "Whitelist already didn't contain `{username}`";
+        config.leave.reportUnlinked = "User was unlinked from `{nickname}`";
+        config.leave.reportRemovedFromWhitelist = "`{nickname}` was removed from the whitelist";
+        config.leave.reportWarningNotInWhitelist = "Whitelist already didn't contain `{nickname}`";
         config.leave.kickMessage = Component.text("You was removed from the whitelist", NamedTextColor.RED);
         config.leave.reportBannedFromGuild = "{discord_mention} was banned from the server";
         config.leave.reportWarningAlreadyBanned = "{discord_mention} was already banned from the server";
@@ -319,8 +325,8 @@ public class LanguageConfig {
         config.status.disabled = "This functionality is disabled";
         config.status.statusMessageNoPlayers = "## No players online";
         config.status.statusMessage = "## {players_count} players online:\n{players}";
-        config.status.statusEntry = "* {username}";
-        config.status.statusEntryLinked = "* {username} ({discord_mention})";
+        config.status.statusEntry = "* {nickname}";
+        config.status.statusEntryLinked = "* {nickname} ({discord_mention})";
 
         return config;
     }

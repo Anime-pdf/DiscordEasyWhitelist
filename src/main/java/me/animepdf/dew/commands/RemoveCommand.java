@@ -3,7 +3,7 @@ package me.animepdf.dew.commands;
 import github.scarsz.discordsrv.api.commands.PluginSlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
@@ -26,8 +26,8 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
     public Set<PluginSlashCommand> getSlashCommands() {
         return Set.of(
                 new PluginSlashCommand(this.plugin, new CommandData("remove", "Remove player from the game server and discord server")
-                        .addOption(OptionType.USER, "member", "Member to remove", true)
-                        .addOption(OptionType.STRING, "username", "Minecraft username, will be taken from guild nickname if empty", false)
+                        .addOption(OptionType.USER, "user", "User to remove", true)
+                        .addOption(OptionType.STRING, "nickname", "Minecraft nickname", false)
                         .addOption(OptionType.STRING, "reason", "Reason", false)
                 )
         );
@@ -36,38 +36,50 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
     @SlashCommand(path = "remove", deferReply = true, deferEphemeral = true)
     public void removeCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        boolean explicitUsername = false;
-        Member member;
-        String username;
+        if (!general().remove.enable) {
+            discordManager.sendError(event,
+                    lang().remove.disabled
+            );
+            return;
+        }
+
+        boolean explicitNickname = false;
+        User user;
+        String nickname;
         @Nullable String reason;
 
         // data integrity
         {
-            var memberRaw = event.getOption("member");
-            var usernameRaw = event.getOption("username");
+            var userRaw = event.getOption("user");
+            var nicknameRaw = event.getOption("nickname");
             var reasonRaw = event.getOption("reason");
 
-            if (memberRaw == null || memberRaw.getAsMember() == null) {
+            if (userRaw == null) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "remove",
-                                "arg", "member")
+                                "arg", "user")
                 );
                 return;
             }
-            member = memberRaw.getAsMember();
+            user = userRaw.getAsUser();
 
-            if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
-                username = member.getEffectiveName();
+            if (nicknameRaw == null || nicknameRaw.getAsString().isEmpty()) {
+                var member = event.getGuild().getMember(user);
+                if (member != null) {
+                    nickname = member.getEffectiveName();
+                } else {
+                    nickname = user.getEffectiveName();
+                }
             } else {
-                explicitUsername = true;
-                username = usernameRaw.getAsString().strip();
+                explicitNickname = true;
+                nickname = nicknameRaw.getAsString().strip();
             }
 
             if (reasonRaw == null || reasonRaw.getAsString().isEmpty()) {
@@ -83,8 +95,8 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         /*
             If moderator entered a nickname
                 Check if nickname linked to discord
-                    - Linked to this member -> unlink, proceed
-                    - Username or discord linked to someone else -> error
+                    - Linked to this user -> unlink, proceed
+                    - Nickname or discord linked to someone else -> error
                     - Not linked -> warning, proceed
             If moderator didn't enter a nickname
                 Check if discord linked to nickname
@@ -95,22 +107,22 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                         - Fallback isn't turned on -> error
                         - Fallback turned on -> warning, fallback to discord name, proceed
          */
-        if (general().enableLinking) {
-            String targetDiscord = member.getId();
-            UUID targetUUID = BukkitUtils.uuidFromUsername(username);
-            UUID linkedUUID = linkManager.getLinkedUUID(member.getId());
+        if (general().remove.unlinkFromNickname) {
+            String targetDiscord = user.getId();
+            UUID targetUUID = BukkitUtils.uuidFromNickname(nickname);
+            UUID linkedUUID = linkManager.getLinkedUUID(user.getId());
             String linkedDiscord = linkManager.getLinkedDiscord(targetUUID);
 
-            if (explicitUsername) {
+            if (explicitNickname) {
                 if (linkedDiscord == null && linkedUUID == null) {
                     output.add(discordManager.appendWarning(
                             MessageFormatter.format(
                                     lang().remove.linkWarningNotLinked,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
-                                    "username", username
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "nickname", nickname
                             )
                     ));
                 } else if (linkedUUID != null && linkedDiscord != null &&
@@ -123,30 +135,30 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                     output.add(discordManager.appendSuccess(
                             MessageFormatter.format(
                                     lang().remove.linkSuccess,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
-                                    "username", username
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "nickname", nickname
                             )
                     ));
                 } else {
                     discordManager.sendError(event,
                             MessageFormatter.format(
                                     lang().remove.linkErrorOther,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
-                                    "username", username
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "nickname", nickname
                             )
                     );
                     return;
                 }
             } else {
                 if (linkedUUID != null) {
-                    var usernameTemp = BukkitUtils.getNickname(linkedUUID);
-                    if (usernameTemp != null) {
+                    var nicknameTemp = BukkitUtils.getNickname(linkedUUID);
+                    if (nicknameTemp != null) {
                         if (linkManager.unlinkAccount(targetDiscord)) {
                             discordManager.sendError(event, lang().general.unknownError);
                             return;
@@ -154,22 +166,22 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                         output.add(discordManager.appendSuccess(
                                 MessageFormatter.format(
                                         lang().remove.linkSuccess,
-                                        "discord_mention", member.getAsMention(),
-                                        "discord_username", member.getUser().getAsTag(),
-                                        "discord_name", member.getEffectiveName(),
-                                        "discord_id", member.getId(),
-                                        "username", usernameTemp
+                                        "discord_mention", user.getAsMention(),
+                                        "discord_username", user.getAsTag(),
+                                        "discord_name", user.getEffectiveName(),
+                                        "discord_id", user.getId(),
+                                        "nickname", nicknameTemp
                                 )
                         ));
-                        username = usernameTemp;
+                        nickname = nicknameTemp;
                     } else {
                         discordManager.sendError(event,
                                 MessageFormatter.format(
                                         lang().remove.linkErrorNeverPlayed,
-                                        "discord_mention", member.getAsMention(),
-                                        "discord_username", member.getUser().getAsTag(),
-                                        "discord_name", member.getEffectiveName(),
-                                        "discord_id", member.getId()
+                                        "discord_mention", user.getAsMention(),
+                                        "discord_username", user.getAsTag(),
+                                        "discord_name", user.getEffectiveName(),
+                                        "discord_id", user.getId()
                                 ));
                         return;
                     }
@@ -178,21 +190,21 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                         output.add(discordManager.appendWarning(
                                 MessageFormatter.format(
                                         lang().remove.linkWarningNotLinkedFallback,
-                                        "discord_mention", member.getAsMention(),
-                                        "discord_username", member.getUser().getAsTag(),
-                                        "discord_name", member.getEffectiveName(),
-                                        "discord_id", member.getId(),
-                                        "fallback", username
+                                        "discord_mention", user.getAsMention(),
+                                        "discord_username", user.getAsTag(),
+                                        "discord_name", user.getEffectiveName(),
+                                        "discord_id", user.getId(),
+                                        "fallback", nickname
                                 )
                         ));
                     } else {
                         discordManager.sendError(event,
                                 MessageFormatter.format(
                                         lang().remove.linkErrorNotLinked,
-                                        "discord_mention", member.getAsMention(),
-                                        "discord_username", member.getUser().getAsTag(),
-                                        "discord_name", member.getEffectiveName(),
-                                        "discord_id", member.getId()
+                                        "discord_mention", user.getAsMention(),
+                                        "discord_username", user.getAsTag(),
+                                        "discord_name", user.getEffectiveName(),
+                                        "discord_id", user.getId()
                                 )
                         );
                     }
@@ -202,18 +214,18 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
 
         // whitelist
         if (general().remove.removeFromWhitelist) {
-            if (whitelistManager.removeFromWhitelist(username)) {
+            if (whitelistManager.removeFromWhitelist(nickname)) {
                 output.add(discordManager.appendWarning(
                         MessageFormatter.format(
                                 lang().remove.whitelistWarningAlready,
-                                "username", username
+                                "nickname", nickname
                         )
                 ));
             } else {
                 output.add(discordManager.appendSuccess(
                         MessageFormatter.format(
                                 lang().remove.whitelistSuccess,
-                                "username", username
+                                "nickname", nickname
                         )
                 ));
             }
@@ -221,9 +233,9 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
 
         // server kick
         if (general().remove.kickFromGameIfOnline) {
-            final String tempUser = username;
+            final String tempNickname = nickname;
             Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
-                var player = Bukkit.getPlayer(tempUser);
+                var player = Bukkit.getPlayer(tempNickname);
                 if (player != null) {
                     player.kick(lang().remove.kickMessage);
                 }
@@ -231,7 +243,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         }
 
         // ban message
-        var guild = member.getGuild();
+        var guild = event.getGuild();
         if (general().remove.sendRemoveMessage) {
             var banChannel = guild.getTextChannelById(general().remove.removeChannelId);
             if (banChannel == null) {
@@ -247,11 +259,11 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                     banChannel.sendMessage(
                             MessageFormatter.format(
                                     String.join("\n", lang().remove.removeMessageReason),
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
-                                    "username", username,
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "nickname", nickname,
                                     "moderator_mention", moderator.getAsMention(),
                                     "moderator_username", moderator.getUser().getAsTag(),
                                     "moderator_name", moderator.getEffectiveName(),
@@ -263,11 +275,11 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                     banChannel.sendMessage(
                             MessageFormatter.format(
                                     String.join("\n", lang().remove.removeMessage),
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
-                                    "username", username,
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "nickname", nickname,
                                     "moderator_mention", moderator.getAsMention(),
                                     "moderator_username", moderator.getUser().getAsTag(),
                                     "moderator_name", moderator.getEffectiveName(),
@@ -287,7 +299,7 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
         // direct message
         CompletableFuture<Void> dmFuture = null;
         if (general().remove.sendDirectMessage) {
-            dmFuture = member.getUser().openPrivateChannel().submit()
+            dmFuture = user.openPrivateChannel().submit()
                     .thenCompose(privateChannel -> {
                         if (reason != null) {
                             return privateChannel.sendMessage(
@@ -304,10 +316,10 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                         output.add(discordManager.appendSuccess(
                                 MessageFormatter.format(
                                         lang().remove.removeDirectMessageSuccess,
-                                        "discord_mention", member.getAsMention(),
-                                        "discord_username", member.getUser().getAsTag(),
-                                        "discord_name", member.getEffectiveName(),
-                                        "discord_id", member.getId()
+                                        "discord_mention", user.getAsMention(),
+                                        "discord_username", user.getAsTag(),
+                                        "discord_name", user.getEffectiveName(),
+                                        "discord_id", user.getId()
                                 )
                         ));
                     })
@@ -315,10 +327,10 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
                         output.add(discordManager.appendWarning(
                                 MessageFormatter.format(
                                         lang().remove.removeDirectMessageFailure,
-                                        "discord_mention", member.getAsMention(),
-                                        "discord_username", member.getUser().getAsTag(),
-                                        "discord_name", member.getEffectiveName(),
-                                        "discord_id", member.getId()
+                                        "discord_mention", user.getAsMention(),
+                                        "discord_username", user.getAsTag(),
+                                        "discord_name", user.getEffectiveName(),
+                                        "discord_id", user.getId()
                                 )
                         ));
                         return null;
@@ -327,16 +339,29 @@ public class RemoveCommand extends DEWComponent implements SlashCommandProvider 
 
         // ban
         if (general().remove.banFromGuild) {
-            discordManager.banMember(member, lang().remove.guildBanReason);
-            output.add(discordManager.appendSuccess(
-                    MessageFormatter.format(
-                            lang().remove.guildBanSuccess,
-                            "discord_mention", member.getAsMention(),
-                            "discord_username", member.getUser().getAsTag(),
-                            "discord_name", member.getEffectiveName(),
-                            "discord_id", member.getId()
-                    )
-            ));
+            var member = event.getGuild().getMember(user);
+            if (member != null) {
+                discordManager.banMember(member, lang().remove.guildBanReason);
+                output.add(discordManager.appendSuccess(
+                        MessageFormatter.format(
+                                lang().remove.guildBanSuccess,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId()
+                        )
+                ));
+            } else {
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().general.userNotOnServer,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId()
+                        )
+                ));
+            }
         }
 
         // success

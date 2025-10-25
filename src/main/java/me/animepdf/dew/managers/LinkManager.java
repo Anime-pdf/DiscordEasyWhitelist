@@ -28,7 +28,7 @@ public class LinkManager {
         return linkManager().getDiscordId(uuid);
     }
     public @Nullable String getLinkedDiscord(@NotNull String username) {
-        return linkManager().getDiscordId(BukkitUtils.uuidFromUsername(username));
+        return linkManager().getDiscordId(BukkitUtils.uuidFromNickname(username));
     }
     public @Nullable UUID getLinkedUUID(@NotNull String discordId) {
         return linkManager().getUuid(discordId);

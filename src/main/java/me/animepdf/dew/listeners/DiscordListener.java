@@ -78,54 +78,52 @@ public class DiscordListener extends ListenerAdapter {
                         return;
 
                     List<String> output = Collections.synchronizedList(new ArrayList<>());
-                    @Nullable String username = null;
+                    @Nullable String nickname = null;
 
-                    if (general().enableLinking) {
+                    if (general().leave.unlinkIfAvailable) {
                         String targetDiscord = user.getId();
                         UUID linkedUUID = linkManager.getLinkedUUID(user.getId());
                         if (linkedUUID != null) {
-                            var usernameTemp = BukkitUtils.getNickname(linkedUUID);
-                            if (general().leave.unlinkIfAvailable) {
-                                if (usernameTemp != null) {
-                                    username = usernameTemp;
-                                    if (linkManager.unlinkAccount(targetDiscord)) {
-                                        output.add(discordManager.appendError(lang().general.unknownError));
-                                    } else {
-                                        output.add(discordManager.appendSuccess(
-                                                MessageFormatter.format(
-                                                        lang().leave.reportUnlinked,
-                                                        "discord_mention", user.getAsMention(),
-                                                        "discord_username", user.getAsTag(),
-                                                        "discord_name", user.getEffectiveName(),
-                                                        "discord_id", user.getId(),
-                                                        "username", username
-                                                )
-                                        ));
-                                    }
+                            var nicknameTemp = BukkitUtils.getNickname(linkedUUID);
+                            if (nicknameTemp != null) {
+                                nickname = nicknameTemp;
+                                if (linkManager.unlinkAccount(targetDiscord)) {
+                                    output.add(discordManager.appendError(lang().general.unknownError));
                                 } else {
-                                    output.add(discordManager.appendWarning(
+                                    output.add(discordManager.appendSuccess(
                                             MessageFormatter.format(
-                                                    lang().leave.reportWarningNameNotResolved,
+                                                    lang().leave.reportUnlinked,
                                                     "discord_mention", user.getAsMention(),
                                                     "discord_username", user.getAsTag(),
                                                     "discord_name", user.getEffectiveName(),
-                                                    "discord_id", user.getId()
+                                                    "discord_id", user.getId(),
+                                                    "nickname", nickname
                                             )
                                     ));
-                                    if (linkManager.unlinkAccount(targetDiscord)) {
-                                        output.add(discordManager.appendError(lang().general.unknownError));
-                                    } else {
-                                        output.add(discordManager.appendWarning(
-                                                MessageFormatter.format(
-                                                        lang().leave.reportUnlinkedNameNotResolved,
-                                                        "discord_mention", user.getAsMention(),
-                                                        "discord_username", user.getAsTag(),
-                                                        "discord_name", user.getEffectiveName(),
-                                                        "discord_id", user.getId(),
-                                                        "uuid", linkedUUID
-                                                )
-                                        ));
-                                    }
+                                }
+                            } else {
+                                output.add(discordManager.appendWarning(
+                                        MessageFormatter.format(
+                                                lang().leave.reportWarningNameNotResolved,
+                                                "discord_mention", user.getAsMention(),
+                                                "discord_username", user.getAsTag(),
+                                                "discord_name", user.getEffectiveName(),
+                                                "discord_id", user.getId()
+                                        )
+                                ));
+                                if (linkManager.unlinkAccount(targetDiscord)) {
+                                    output.add(discordManager.appendError(lang().general.unknownError));
+                                } else {
+                                    output.add(discordManager.appendWarning(
+                                            MessageFormatter.format(
+                                                    lang().leave.reportUnlinkedNameNotResolved,
+                                                    "discord_mention", user.getAsMention(),
+                                                    "discord_username", user.getAsTag(),
+                                                    "discord_name", user.getEffectiveName(),
+                                                    "discord_id", user.getId(),
+                                                    "uuid", linkedUUID
+                                            )
+                                    ));
                                 }
                             }
                         } else {
@@ -142,27 +140,27 @@ public class DiscordListener extends ListenerAdapter {
                     }
 
                     if (general().leave.removeFromWhitelist) {
-                        if (username != null) {
-                            if (whitelistManager.removeFromWhitelist(username)) {
+                        if (nickname != null) {
+                            if (whitelistManager.removeFromWhitelist(nickname)) {
                                 output.add(discordManager.appendWarning(
                                         MessageFormatter.format(
                                                 lang().leave.reportWarningNotInWhitelist,
-                                                "username", username
+                                                "nickname", nickname
                                         )
                                 ));
                             } else {
                                 output.add(discordManager.appendSuccess(
                                         MessageFormatter.format(
                                                 lang().leave.reportRemovedFromWhitelist,
-                                                "username", username
+                                                "nickname", nickname
                                         )
                                 ));
                             }
                         }
                     }
 
-                    if (general().leave.kickFromGameIfOnline && username != null) {
-                        final String tempUser = username;
+                    if (general().leave.kickFromGameIfOnline && nickname != null) {
+                        final String tempUser = nickname;
                         Bukkit.getScheduler().runTask(this.plugin, scheduledTask -> {
                             var player = Bukkit.getPlayer(tempUser);
                             if (player != null) {
@@ -206,7 +204,7 @@ public class DiscordListener extends ListenerAdapter {
                                     )
                             ));
                         } else {
-                            if (username == null) {
+                            if (nickname == null) {
                                 leaveChannel.sendMessage(
                                         MessageFormatter.format(
                                                 String.join("\n", lang().leave.leaveMessageNameNotResolved),
@@ -224,7 +222,7 @@ public class DiscordListener extends ListenerAdapter {
                                                 "discord_username", user.getAsTag(),
                                                 "discord_name", user.getEffectiveName(),
                                                 "discord_id", user.getId(),
-                                                "username", username
+                                                "nickname", nickname
                                         )
                                 ).queue();
                             }

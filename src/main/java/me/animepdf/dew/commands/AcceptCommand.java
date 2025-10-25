@@ -3,7 +3,7 @@ package me.animepdf.dew.commands;
 import github.scarsz.discordsrv.api.commands.PluginSlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
@@ -24,9 +24,9 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
     @Override
     public Set<PluginSlashCommand> getSlashCommands() {
         return Set.of(
-                new PluginSlashCommand(this.plugin, new CommandData("accept", "Accept a mimocrocodile to the server")
-                        .addOption(OptionType.USER, "member", "Member to add", true)
-                        .addOption(OptionType.STRING, "username", "Minecraft username to add to whitelist", true)
+                new PluginSlashCommand(this.plugin, new CommandData("accept", "Accept a newbie to the server")
+                        .addOption(OptionType.USER, "user", "User to add", true)
+                        .addOption(OptionType.STRING, "nickname", "Minecraft nickname to add to whitelist", true)
                 )
         );
     }
@@ -34,66 +34,73 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
     @SlashCommand(path = "accept", deferReply = true, deferEphemeral = true)
     public void acceptCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        Member member;
-        String username;
+        if (!general().accept.enable) {
+            discordManager.sendError(event,
+                    lang().accept.disabled
+            );
+            return;
+        }
+
+        User user;
+        String nickname;
 
         // data integrity
         {
-            var memberRaw = event.getOption("member");
-            var usernameRaw = event.getOption("username");
+            var userRaw = event.getOption("user");
+            var nicknameRaw = event.getOption("nickname");
 
-            if (memberRaw == null || memberRaw.getAsMember() == null) {
+            if (userRaw == null) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "accept",
-                                "arg", "member")
+                                "arg", "user")
                 );
                 return;
             }
-            member = memberRaw.getAsMember();
+            user = userRaw.getAsUser();
 
-            if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
+            if (nicknameRaw == null || nicknameRaw.getAsString().isEmpty()) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "accept",
-                                "arg", "username")
+                                "arg", "nickname")
                 );
                 return;
             }
-            username = usernameRaw.getAsString().strip();
+            nickname = nicknameRaw.getAsString().strip();
         }
 
-        var guild = member.getGuild();
+        var guild = event.getGuild();
         List<String> output = new ArrayList<>();
 
         // discord
-        if (general().enableLinking) {
-            String targetDiscord = member.getId();
-            UUID targetUUID = BukkitUtils.uuidFromUsername(username);
+        if (general().accept.linkToNickname) {
+            String targetDiscord = user.getId();
+            UUID targetUUID = BukkitUtils.uuidFromNickname(nickname);
             String linkedDiscord = linkManager.getLinkedDiscord(targetUUID);
             UUID linkedUUID = linkManager.getLinkedUUID(targetDiscord);
 
             if (linkedDiscord == null && linkedUUID == null) {
-                if (linkManager.linkAccount(BukkitUtils.uuidFromUsername(username), member.getId())) {
+                if (linkManager.linkAccount(BukkitUtils.uuidFromNickname(nickname), user.getId())) {
                     discordManager.sendError(event, lang().general.unknownError);
                     return;
                 } else {
                     output.add(discordManager.appendSuccess(
                             MessageFormatter.format(
                                     lang().accept.linkSuccess,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
                                     "uuid", targetUUID,
-                                    "username", username
+                                    "nickname", nickname
                             )
                     ));
                 }
@@ -103,24 +110,24 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
                 output.add(discordManager.appendWarning(
                         MessageFormatter.format(
                                 lang().accept.linkWarningAlreadySame,
-                                "discord_mention", member.getAsMention(),
-                                "discord_username", member.getUser().getAsTag(),
-                                "discord_name", member.getEffectiveName(),
-                                "discord_id", member.getId(),
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
                                 "uuid", linkedUUID,
-                                "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                                "nickname", BukkitUtils.getNickname(linkedUUID, user.getEffectiveName())
                         )
                 ));
             } else {
                 output.add(discordManager.appendWarning(
                         MessageFormatter.format(
                                 lang().accept.linkWarningAlreadyOthers,
-                                "discord_mention", member.getAsMention(),
-                                "discord_username", member.getUser().getAsTag(),
-                                "discord_name", member.getEffectiveName(),
-                                "discord_id", member.getId(),
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
                                 "uuid", linkedUUID,
-                                "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                                "nickname", BukkitUtils.getNickname(linkedUUID, user.getEffectiveName())
                         )
                 ));
             }
@@ -128,18 +135,18 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
 
         // whitelist
         if (general().accept.addToWhitelist) {
-            if (whitelistManager.addToWhitelist(username)) {
+            if (whitelistManager.addToWhitelist(nickname)) {
                 output.add(discordManager.appendWarning(
                         MessageFormatter.format(
                                 lang().accept.whitelistWarningAlready,
-                                "username", username
+                                "nickname", nickname
                         )
                 ));
             } else {
                 output.add(discordManager.appendSuccess(
                         MessageFormatter.format(
                                 lang().accept.whitelistSuccess,
-                                "username", username
+                                "nickname", nickname
                         )
                 ));
             }
@@ -147,63 +154,102 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
 
         // guild name
         if (general().accept.changeGuildName) {
-            discordManager.changeName(member, username);
-            output.add(discordManager.appendSuccess(
-                    MessageFormatter.format(
-                            lang().accept.guildNameSuccess,
-                            "discord_mention", member.getAsMention(),
-                            "discord_username", member.getUser().getAsTag(),
-                            "discord_name", member.getEffectiveName(),
-                            "discord_id", member.getId(),
-                            "username", username
-                    )
-            ));
+            var member = guild.getMember(user);
+            if(member != null) {
+                discordManager.changeName(member, nickname);
+                output.add(discordManager.appendSuccess(
+                        MessageFormatter.format(
+                                lang().accept.guildNameSuccess,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
+                                "nickname", nickname
+                        )
+                ));
+            } else {
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().general.userNotOnServer,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId()
+                        )
+                ));
+            }
         }
 
         // roles remove
         List<String> rolesString = new ArrayList<>();
         if (general().accept.removeRoles) {
-            for (String roleId : general().accept.rolesToRemove) {
-                var role = guild.getRoleById(roleId);
-                if (role == null) {
-                    continue;
+            var member = guild.getMember(user);
+            if (member != null) {
+                for (String roleId : general().accept.rolesToRemove) {
+                    var role = guild.getRoleById(roleId);
+                    if (role == null) {
+                        continue;
+                    }
+                    guild.removeRoleFromMember(member, role).queue();
+                    rolesString.add(String.format("%s", role.getAsMention()));
                 }
-                guild.removeRoleFromMember(member, role).queue();
-                rolesString.add(String.format("%s", role.getAsMention()));
+                output.add(discordManager.appendSuccess(
+                        MessageFormatter.format(
+                                lang().accept.guildRoleRemoveSuccess,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
+                                "roles", String.join(" ", rolesString)
+                        )
+                ));
+            } else {
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().general.userNotOnServer,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId()
+                        )
+                ));
             }
-            output.add(discordManager.appendSuccess(
-                    MessageFormatter.format(
-                            lang().accept.guildRoleRemoveSuccess,
-                            "discord_mention", member.getAsMention(),
-                            "discord_username", member.getUser().getAsTag(),
-                            "discord_name", member.getEffectiveName(),
-                            "discord_id", member.getId(),
-                            "roles", String.join(" ", rolesString)
-                    )
-            ));
         }
 
         // roles add
         if (general().accept.addRoles) {
-            rolesString.clear();
-            for (String roleId : general().accept.rolesToAdd) {
-                var role = guild.getRoleById(roleId);
-                if (role == null) {
-                    continue;
+            var member = guild.getMember(user);
+            if (member != null) {
+                rolesString.clear();
+                for (String roleId : general().accept.rolesToAdd) {
+                    var role = guild.getRoleById(roleId);
+                    if (role == null) {
+                        continue;
+                    }
+                    guild.addRoleToMember(member, role).queue();
+                    rolesString.add(String.format("%s", role.getAsMention()));
                 }
-                guild.addRoleToMember(member, role).queue();
-                rolesString.add(String.format("%s", role.getAsMention()));
+                output.add(discordManager.appendSuccess(
+                        MessageFormatter.format(
+                                lang().accept.guildRoleAddSuccess,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
+                                "roles", String.join(" ", rolesString)
+                        )
+                ));
+            } else {
+                output.add(discordManager.appendWarning(
+                        MessageFormatter.format(
+                                lang().general.userNotOnServer,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId()
+                        )
+                ));
             }
-            output.add(discordManager.appendSuccess(
-                    MessageFormatter.format(
-                            lang().accept.guildRoleAddSuccess,
-                            "discord_mention", member.getAsMention(),
-                            "discord_username", member.getUser().getAsTag(),
-                            "discord_name", member.getEffectiveName(),
-                            "discord_id", member.getId(),
-                            "roles", String.join(" ", rolesString)
-                    )
-            ));
         }
 
         // welcome message
@@ -222,11 +268,11 @@ public class AcceptCommand extends DEWComponent implements SlashCommandProvider 
                 welcomeChannel.sendMessage(
                         MessageFormatter.format(
                                 message,
-                                "discord_mention", member.getAsMention(),
-                                "discord_username", member.getUser().getAsTag(),
-                                "discord_name", member.getEffectiveName(),
-                                "discord_id", member.getId(),
-                                "username", username,
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
+                                "nickname", nickname,
                                 "moderator_mention", moderator.getAsMention(),
                                 "moderator_username", moderator.getUser().getAsTag(),
                                 "moderator_name", moderator.getEffectiveName(),

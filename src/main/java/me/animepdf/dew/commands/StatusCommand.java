@@ -3,13 +3,10 @@ package me.animepdf.dew.commands;
 import github.scarsz.discordsrv.api.commands.PluginSlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
 import me.animepdf.dew.DiscordEasyWhitelist;
 import me.animepdf.dew.abstact.DEWComponent;
-import me.animepdf.dew.util.BukkitUtils;
 import me.animepdf.dew.util.MessageFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,7 +14,6 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 public class StatusCommand extends DEWComponent implements SlashCommandProvider {
     public StatusCommand(DiscordEasyWhitelist plugin) {
@@ -57,7 +53,7 @@ public class StatusCommand extends DEWComponent implements SlashCommandProvider 
                 playerEntries.add(
                         MessageFormatter.format(
                                 lang().status.statusEntry,
-                                "username", player.getName()
+                                "nickname", player.getName()
                         )
                 );
             } else {
@@ -68,7 +64,7 @@ public class StatusCommand extends DEWComponent implements SlashCommandProvider 
                                 "discord_username", user.getAsTag(),
                                 "discord_name", user.getEffectiveName(),
                                 "discord_id", user.getId(),
-                                "username", player.getName()
+                                "nickname", player.getName()
                         )
                 );
             }

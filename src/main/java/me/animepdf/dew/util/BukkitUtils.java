@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class BukkitUtils {
-    public static UUID uuidFromUsername(@NotNull String username) {
+    public static UUID uuidFromNickname(@NotNull String username) {
         return Bukkit.getOnlineMode() ? Bukkit.getOfflinePlayer(username).getUniqueId() : crackedUUIDFromUsername(username);
     }
 

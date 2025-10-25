@@ -6,11 +6,30 @@ import java.util.List;
 
 @ConfigSerializable
 public class GeneralConfig {
-    public boolean enableLinking = true;
     public List<String> moderatorRoles = List.of("0000000000000000000", "0000000000000000000");
 
     @ConfigSerializable
+    public static class WhitelistOptions {
+        public boolean enable = true;
+
+        public WhitelistOptions() {
+        }
+    }
+    public WhitelistOptions whitelist = new WhitelistOptions();
+
+    @ConfigSerializable
+    public static class LinkOptions {
+        public boolean enable = true;
+
+        public LinkOptions() {
+        }
+    }
+    public LinkOptions link = new LinkOptions();
+
+    @ConfigSerializable
     public static class AcceptOptions {
+        public boolean enable = true;
+        public boolean linkToNickname = true;
         public boolean addToWhitelist = true;
         public boolean changeGuildName = true;
         public boolean addRoles = true;
@@ -27,6 +46,8 @@ public class GeneralConfig {
 
     @ConfigSerializable
     public static class RemoveOptions {
+        public boolean enable = true;
+        public boolean unlinkFromNickname = true;
         public boolean fallbackToGuildUsername = false;
         public boolean removeFromWhitelist = true;
         public boolean kickFromGameIfOnline = true;

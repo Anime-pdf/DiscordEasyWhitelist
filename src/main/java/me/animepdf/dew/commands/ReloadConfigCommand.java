@@ -25,7 +25,7 @@ public class ReloadConfigCommand extends DEWComponent implements SlashCommandPro
     @SlashCommand(path = "reload", deferEphemeral = true, deferReply = true)
     public void reloadCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }

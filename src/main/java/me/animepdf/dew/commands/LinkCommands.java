@@ -3,8 +3,7 @@ package me.animepdf.dew.commands;
 import github.scarsz.discordsrv.api.commands.PluginSlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommand;
 import github.scarsz.discordsrv.api.commands.SlashCommandProvider;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
@@ -27,17 +26,17 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
     public Set<PluginSlashCommand> getSlashCommands() {
         return Set.of(
                 new PluginSlashCommand(this.plugin, new CommandData("link", "Remove player from the game server and discord server")
-                        .addSubcommands(new SubcommandData("check", "Check if account/username is linked")
-                                .addOptions(new OptionData(OptionType.USER, "member", "Member to check", false))
-                                .addOptions(new OptionData(OptionType.STRING, "username", "Username to check", false))
+                        .addSubcommands(new SubcommandData("check", "Check if user/nickname is linked")
+                                .addOptions(new OptionData(OptionType.USER, "user", "User to check", false))
+                                .addOptions(new OptionData(OptionType.STRING, "nickname", "Nickname to check", false))
                         )
-                        .addSubcommands(new SubcommandData("add", "Link account to username")
-                                .addOptions(new OptionData(OptionType.USER, "member", "Member to link", true))
-                                .addOptions(new OptionData(OptionType.STRING, "username", "Username to link", true))
+                        .addSubcommands(new SubcommandData("add", "Link user to nickname")
+                                .addOptions(new OptionData(OptionType.USER, "user", "User to link", true))
+                                .addOptions(new OptionData(OptionType.STRING, "nickname", "Nickname to link", true))
                         )
-                        .addSubcommands(new SubcommandData("remove", "Link account to username")
-                                .addOptions(new OptionData(OptionType.USER, "member", "Member to link", false))
-                                .addOptions(new OptionData(OptionType.STRING, "username", "Username to link", false))
+                        .addSubcommands(new SubcommandData("remove", "Link user to nickname")
+                                .addOptions(new OptionData(OptionType.USER, "user", "User to link", false))
+                                .addOptions(new OptionData(OptionType.STRING, "nickname", "Nickname to link", false))
                         )
                 )
         );
@@ -46,12 +45,12 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
     @SlashCommand(path = "link/check", deferReply = true, deferEphemeral = true)
     public void linkCheckCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        if (!general().enableLinking) {
+        if (!general().link.enable) {
             discordManager.sendError(event,
                     lang().link.disabled
             );
@@ -59,29 +58,22 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
         }
 
 
-        Member member = null;
-        String username = null;
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            discordManager.sendError(event,
-                    lang().general.onlyOnServer
-            );
-            return;
-        }
+        User user = null;
+        String nickname = null;
 
         // data integrity
         {
-            var memberRaw = event.getOption("member");
-            var usernameRaw = event.getOption("username");
+            var userRaw = event.getOption("user");
+            var nicknameRaw = event.getOption("nickname");
 
-            if (memberRaw != null && memberRaw.getAsMember() != null) {
-                member = memberRaw.getAsMember();
+            if (userRaw != null) {
+                user = userRaw.getAsUser();
             }
-            if (usernameRaw != null && !usernameRaw.getAsString().isEmpty()) {
-                username = usernameRaw.getAsString().strip();
+            if (nicknameRaw != null && !nicknameRaw.getAsString().isEmpty()) {
+                nickname = nicknameRaw.getAsString().strip();
             }
 
-            if (username == null && member == null) {
+            if (nickname == null && user == null) {
                 discordManager.sendError(event,
                         lang().general.noCommandArgument
                 );
@@ -89,39 +81,24 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
             }
         }
 
-        // discord
-        if (member == null) {
-            UUID uuid = BukkitUtils.uuidFromUsername(username);
+        if (user == null) {
+            UUID uuid = BukkitUtils.uuidFromNickname(nickname);
             String linkedDiscord = linkManager.getLinkedDiscord(uuid);
             if (linkedDiscord != null) {
-                var targetMember = guild.getMemberById(linkedDiscord);
-                if (targetMember == null) {
-                    var user = discordManager.getUser(linkedDiscord);
-                    if (user == null) {
-                        discordManager.sendError(event,
-                                lang().general.unknownError
-                        );
-                        return;
-                    }
-                    discordManager.sendWarning(event,
-                            MessageFormatter.format(
-                                    lang().link.nicknameLinkedNotOnServer,
-                                    "discord_mention", user.getAsMention(),
-                                    "discord_username", user.getAsTag(),
-                                    "discord_name", user.getEffectiveName(),
-                                    "discord_id", user.getId(),
-                                    "username", username
-                            )
+                var targetUser = discordManager.getUser(linkedDiscord);
+                if (targetUser == null) {
+                    discordManager.sendError(event,
+                            lang().general.unknownError
                     );
                 } else {
                     discordManager.sendSuccess(event,
                             MessageFormatter.format(
-                                    lang().link.nicknameLinkedOnServer,
-                                    "discord_mention", targetMember.getAsMention(),
-                                    "discord_username", targetMember.getUser().getAsTag(),
-                                    "discord_name", targetMember.getEffectiveName(),
-                                    "discord_id", targetMember.getId(),
-                                    "username", username
+                                    lang().link.nicknameLinked,
+                                    "discord_mention", targetUser.getAsMention(),
+                                    "discord_username", targetUser.getAsTag(),
+                                    "discord_name", targetUser.getEffectiveName(),
+                                    "discord_id", targetUser.getId(),
+                                    "nickname", nickname
                             )
                     );
                 }
@@ -129,23 +106,23 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().link.nicknameNotLinked,
-                                "username", username
+                                "nickname", nickname
                         )
                 );
             }
-        } else if (username == null) {
-            String discordId = member.getId();
+        } else if (nickname == null) {
+            String discordId = user.getId();
             UUID linkedUUID = linkManager.getLinkedUUID(discordId);
             if (linkedUUID != null) {
-                String linkedUsername = BukkitUtils.getNickname(linkedUUID);
-                if (linkedUsername == null) {
+                String linkedNickname = BukkitUtils.getNickname(linkedUUID);
+                if (linkedNickname == null) {
                     discordManager.sendWarning(event,
                             MessageFormatter.format(
                                     lang().link.userLinkedNoNickname,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
                                     "uuid", linkedUUID
                             )
                     );
@@ -153,11 +130,11 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
                     discordManager.sendSuccess(event,
                             MessageFormatter.format(
                                     lang().link.userLinked,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
-                                    "username", linkedUsername
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "nickname", linkedNickname
                             )
                     );
                 }
@@ -165,10 +142,10 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().link.userNotLinked,
-                                "discord_mention", member.getAsMention(),
-                                "discord_username", member.getUser().getAsTag(),
-                                "discord_name", member.getEffectiveName(),
-                                "discord_id", member.getId()
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId()
                         )
                 );
             }
@@ -182,68 +159,68 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
     @SlashCommand(path = "link/add", deferReply = true, deferEphemeral = true)
     public void linkAddCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        if (!general().enableLinking) {
+        if (!general().link.enable) {
             discordManager.sendError(event,
                     lang().link.disabled
             );
             return;
         }
 
-        Member member = null;
-        String username = null;
+        User user = null;
+        String nickname = null;
 
         // data integrity
         {
-            var memberRaw = event.getOption("member");
-            var usernameRaw = event.getOption("username");
+            var userRaw = event.getOption("user");
+            var nicknameRaw = event.getOption("nickname");
 
-            if (memberRaw == null || memberRaw.getAsMember() == null) {
+            if (userRaw == null) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "link/add",
-                                "arg", "member")
+                                "arg", "user")
                 );
                 return;
             }
-            member = memberRaw.getAsMember();
+            user = userRaw.getAsUser();
 
-            if (usernameRaw == null || usernameRaw.getAsString().isEmpty()) {
+            if (nicknameRaw == null || nicknameRaw.getAsString().isEmpty()) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().general.wrongCommandArgument,
                                 "command", "link/add",
-                                "arg", "username")
+                                "arg", "nickname")
                 );
                 return;
             }
-            username = usernameRaw.getAsString().strip();
+            nickname = nicknameRaw.getAsString().strip();
         }
 
         // discord
-        String targetDiscord = member.getId();
-        UUID targetUUID = BukkitUtils.uuidFromUsername(username);
+        String targetDiscord = user.getId();
+        UUID targetUUID = BukkitUtils.uuidFromNickname(nickname);
         String linkedDiscord = linkManager.getLinkedDiscord(targetUUID);
         UUID linkedUUID = linkManager.getLinkedUUID(targetDiscord);
 
         if (linkedDiscord == null && linkedUUID == null) {
-            if (linkManager.linkAccount(BukkitUtils.uuidFromUsername(username), member.getId())) {
+            if (linkManager.linkAccount(BukkitUtils.uuidFromNickname(nickname), user.getId())) {
                 discordManager.sendError(event, lang().general.unknownError);
             } else {
                 discordManager.sendSuccess(event,
                         MessageFormatter.format(
                                 lang().link.linkSuccess,
-                                "discord_mention", member.getAsMention(),
-                                "discord_username", member.getUser().getAsTag(),
-                                "discord_name", member.getEffectiveName(),
-                                "discord_id", member.getId(),
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
                                 "uuid", targetUUID,
-                                "username", username
+                                "nickname", nickname
                         )
                 );
             }
@@ -253,24 +230,24 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
             discordManager.sendWarning(event,
                     MessageFormatter.format(
                             lang().link.linkWarningAlreadySame,
-                            "discord_mention", member.getAsMention(),
-                            "discord_username", member.getUser().getAsTag(),
-                            "discord_name", member.getEffectiveName(),
-                            "discord_id", member.getId(),
+                            "discord_mention", user.getAsMention(),
+                            "discord_username", user.getAsTag(),
+                            "discord_name", user.getEffectiveName(),
+                            "discord_id", user.getId(),
                             "uuid", linkedUUID,
-                            "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                            "nickname", BukkitUtils.getNickname(linkedUUID, user.getEffectiveName())
                     )
             );
         } else {
             discordManager.sendError(event,
                     MessageFormatter.format(
                             lang().link.linkWarningAlreadyOthers,
-                            "discord_mention", member.getAsMention(),
-                            "discord_username", member.getUser().getAsTag(),
-                            "discord_name", member.getEffectiveName(),
-                            "discord_id", member.getId(),
+                            "discord_mention", user.getAsMention(),
+                            "discord_username", user.getAsTag(),
+                            "discord_name", user.getEffectiveName(),
+                            "discord_id", user.getId(),
                             "uuid", linkedUUID,
-                            "username", BukkitUtils.getNickname(linkedUUID, member.getEffectiveName())
+                            "nickname", BukkitUtils.getNickname(linkedUUID, user.getEffectiveName())
                     )
             );
         }
@@ -279,34 +256,34 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
     @SlashCommand(path = "link/remove", deferReply = true, deferEphemeral = true)
     public void linkRemoveCommand(SlashCommandEvent event) {
         // permission
-        if (event.getMember() == null || !discordManager.hasModPermission(event.getMember())) {
+        if (event.getMember() == null || event.getGuild() == null || !discordManager.hasModPermission(event.getMember())) {
             discordManager.sendError(event, lang().general.noPermission);
             return;
         }
 
-        if (!general().enableLinking) {
+        if (!general().link.enable) {
             discordManager.sendError(event,
                     lang().link.disabled
             );
             return;
         }
 
-        Member member = null;
-        String username = null;
+        User user = null;
+        String nickname = null;
 
         // data integrity
         {
-            var memberRaw = event.getOption("member");
-            var usernameRaw = event.getOption("username");
+            var userRaw = event.getOption("user");
+            var nicknameRaw = event.getOption("nickname");
 
-            if (memberRaw != null && memberRaw.getAsMember() != null) {
-                member = memberRaw.getAsMember();
+            if (userRaw != null) {
+                user = userRaw.getAsUser();
             }
-            if (usernameRaw != null && !usernameRaw.getAsString().isEmpty()) {
-                username = usernameRaw.getAsString().strip();
+            if (nicknameRaw != null && !nicknameRaw.getAsString().isEmpty()) {
+                nickname = nicknameRaw.getAsString().strip();
             }
 
-            if (username == null && member == null) {
+            if (nickname == null && user == null) {
                 discordManager.sendError(event,
                         lang().general.noCommandArgument
                 );
@@ -315,19 +292,19 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
         }
 
         // discord
-        if (member == null) {
-            UUID uuid = BukkitUtils.uuidFromUsername(username);
+        if (user == null) {
+            UUID uuid = BukkitUtils.uuidFromNickname(nickname);
             String linkedDiscord = linkManager.getLinkedDiscord(uuid);
             if (linkManager.unlinkAccount(uuid)) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().link.unlinkNicknameNotFound,
-                                "username", username
+                                "nickname", nickname
                         )
                 );
             } else {
-                var user = discordManager.getUser(linkedDiscord);
-                if (user == null) {
+                var targetUser = discordManager.getUser(linkedDiscord);
+                if (targetUser == null) {
                     discordManager.sendError(event,
                             lang().general.unknownError
                     );
@@ -336,38 +313,38 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
                 discordManager.sendSuccess(event,
                         MessageFormatter.format(
                                 lang().link.unlinkNicknameSuccess,
-                                "discord_mention", user.getAsMention(),
-                                "discord_username", user.getAsTag(),
-                                "discord_name", user.getEffectiveName(),
-                                "discord_id", user.getId(),
-                                "username", username
+                                "discord_mention", targetUser.getAsMention(),
+                                "discord_username", targetUser.getAsTag(),
+                                "discord_name", targetUser.getEffectiveName(),
+                                "discord_id", targetUser.getId(),
+                                "nickname", nickname
                         )
                 );
             }
-        } else if (username == null) {
-            String discordId = member.getId();
+        } else if (nickname == null) {
+            String discordId = user.getId();
             UUID linkedUUID = linkManager.getLinkedUUID(discordId);
             if (linkManager.unlinkAccount(discordId)) {
                 discordManager.sendError(event,
                         MessageFormatter.format(
                                 lang().link.unlinkUserNotFound,
-                                "discord_mention", member.getAsMention(),
-                                "discord_username", member.getUser().getAsTag(),
-                                "discord_name", member.getEffectiveName(),
-                                "discord_id", member.getId(),
-                                "username", username
+                                "discord_mention", user.getAsMention(),
+                                "discord_username", user.getAsTag(),
+                                "discord_name", user.getEffectiveName(),
+                                "discord_id", user.getId(),
+                                "nickname", nickname
                         )
                 );
             } else {
-                String linkedUsername = BukkitUtils.getNickname(linkedUUID);
-                if (linkedUsername == null) {
+                String linkedNickname = BukkitUtils.getNickname(linkedUUID);
+                if (linkedNickname == null) {
                     discordManager.sendWarning(event,
                             MessageFormatter.format(
                                     lang().link.unlinkUserSuccessNoNickname,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
                                     "uuid", linkedUUID
                             )
                     );
@@ -375,11 +352,11 @@ public class LinkCommands extends DEWComponent implements SlashCommandProvider {
                     discordManager.sendSuccess(event,
                             MessageFormatter.format(
                                     lang().link.unlinkUserSuccess,
-                                    "discord_mention", member.getAsMention(),
-                                    "discord_username", member.getUser().getAsTag(),
-                                    "discord_name", member.getEffectiveName(),
-                                    "discord_id", member.getId(),
-                                    "username", username
+                                    "discord_mention", user.getAsMention(),
+                                    "discord_username", user.getAsTag(),
+                                    "discord_name", user.getEffectiveName(),
+                                    "discord_id", user.getId(),
+                                    "nickname", nickname
                             )
                     );
                 }

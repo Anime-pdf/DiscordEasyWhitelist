@@ -20,7 +20,6 @@ public class LanguageConfig {
         public String wrongCommandArgument = "Аргумент `{arg}` введен некорректно";
         public String noCommandArgument = "Введите хотя бы один аргумент";
         public String tooManyCommandArguments = "Слишком много аргументов";
-        public String onlyOnServer = "Эта команда может быть использована только на сервере";
         public String channelNotFound = "Канал `{channel_id}` не найден, сообщение не будет отправлено";
         public String userNotOnServer = "{discord_mention} не находится на сервере";
 
@@ -228,7 +227,6 @@ public class LanguageConfig {
         config.general.wrongCommandArgument = "Invalid argument: `{arg}`";
         config.general.noCommandArgument = "Enter at least one argument";
         config.general.tooManyCommandArguments = "Too many arguments entered";
-        config.general.onlyOnServer = "This command can only be used on discord server";
         config.general.channelNotFound = "Channel `{channel_id}` not found, message won't be sent";
         config.general.userNotOnServer = "{discord_mention} is not in the guild";
 
@@ -310,8 +308,8 @@ public class LanguageConfig {
         config.leave.reportMessage = "{discord_mention} left the server!\n{report}";
         config.leave.reportWarningNotLinked = "User wasn't linked to any nickname";
         config.leave.reportWarningNameNotResolved = "Player didn't join server once, can't retrieve his nickname";
-        config.leave.reportUnlinkedNameNotResolved = "User was unlinked from UUID `{uuid}`";
         config.leave.reportUnlinked = "User was unlinked from `{nickname}`";
+        config.leave.reportUnlinkedNameNotResolved = "User was unlinked from UUID `{uuid}`";
         config.leave.reportRemovedFromWhitelist = "`{nickname}` was removed from the whitelist";
         config.leave.reportWarningNotInWhitelist = "Whitelist already didn't contain `{nickname}`";
         config.leave.kickMessage = Component.text("You was removed from the whitelist", NamedTextColor.RED);
